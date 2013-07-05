@@ -38,7 +38,7 @@ import Text.Parsec.Char
 import Control.Monad.IO.Class
 
 
-symbolFile = "/etc/zankoku-okuno/cleaner/symbols.conf"
+symbolFile = "/etc/zankoku-okuno/unicoder/symbols.conf"
 
 main :: IO ()
 main = do

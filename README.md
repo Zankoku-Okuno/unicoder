@@ -15,7 +15,7 @@ separate names from the following other letters. Really, just see the examples
 and everything will be clear.
 
 The symbol configuration file is assumed to be in 
-`/etc/zankoku-okuno/cleaner/symbols.conf`. The format is simple: each non-blank 
+`/etc/zankoku-okuno/unicoder/symbols.conf`. The format is simple: each non-blank 
 line contains an alphabetic name, some whitespace, then the replacement unicode 
 text.
 
