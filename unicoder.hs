@@ -1,0 +1,120 @@
+{-------------------------------------------------------------------------------
+    This program reads in a source file and makes replacements. The goal is to 
+    allow ascii interfaces to be able to insert unicode easily, thus enabling 
+    nice-looking programming language syntax. The replacements overwrite the 
+    original file.
+
+    Note that when cleaning XXX, XXX.tmp is created, which may overwrite 
+    something you wanted to keep around. You have been warned.
+
+    There are two ways to input unicode characters: either /\\\d+\.?/, which 
+    inserts the unicode indexed by that decimal code point; or /\\\w+\.?/, which 
+    looks up the name in a symbol configuration file.
+
+    The symbol configuration file is assumed to be in
+    `/etc/zankoku-okuno/cleaner/symbols.conf'. The format is simple: each 
+    non-blank line contains an alphabetic name, some whitespace, then the 
+    replacement unicode text.
+
+    Rather than providing the user with a load of options, I expect users to 
+    hack this file if they need something customized. As you can see, the 
+    codebase is neither large nor complex. Perhaps the most common customization 
+    will be changing where to look for a symbol file.
+-------------------------------------------------------------------------------}
+
+{-------------------------------------------------------------------------------
+Copyright (c) 2013, Okuno Zankoku
+All rights reserved. 
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+  * Redistributions of source code must retain the above copyright notice, this 
+  list of conditions and the following disclaimer.
+
+  * Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+  * Neither the name of Okuno Zankoku nor the names of contributors may be used
+  to endorse or promote products derived from this software without specific
+  prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY OKUNO ZANKOKU "AS IS" AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL OKUNO ZANKOKU BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-------------------------------------------------------------------------------}
+import System.Environment
+import System.IO
+import System.Directory
+import System.Exit
+import Data.Char
+import Text.Parsec
+import Text.Parsec.Combinator
+import Text.Parsec.Char
+import Control.Monad.IO.Class
+
+
+symbolFile = "/etc/zankoku-okuno/cleaner/symbols.conf"
+
+main :: IO ()
+main = do
+    symbols <- return . map makePair . filter (\x -> length x == 2) . map words . lines =<< readFile symbolFile
+    args <- getArgs
+    if args == []
+      then die "no input files"
+      else mapM (mainLoop symbols) args
+    exitSuccess
+
+mainLoop :: Lookup -> FilePath -> IO ()    
+mainLoop symbols filename = do
+        source <- readFile filename
+        handle <- openFile tmpname WriteMode
+        result <- runPT cleaner (symbols, handle) filename source
+        hClose handle
+        case result of
+            Left err -> die (show err)
+            Right val -> renameFile tmpname filename
+    where tmpname = filename ++ ".tmp"
+
+
+type Lookup = [(String, String)]
+type Parser a = ParsecT String (Lookup, Handle) IO a
+
+cleaner :: Parser ()
+cleaner = many (replace <|> anything <|> inString) >> eof
+
+anything :: Parser ()
+anything = many1 (noneOf "\\\"") >>= putCode >> return ()
+
+replace :: Parser ()
+replace = char '\\' >> (decodeNum <|> decodeKey) >>= putCode >> optional (char '.')
+    where decodeNum = many1 digit  >>= return . (:"") . chr . read
+          decodeKey = many1 letter >>= lookupCode
+
+inString :: Parser ()
+inString = between quote quote $ many (anything <|> escape) >> return ()
+    where quote  = char '"'  >>= putCode . (:"")
+          escape = char '\\' >>= putCode . (:"") >> anyChar >>= putCode . (:"")
+
+
+lookupCode name = do
+    (table, _) <- getState
+    maybe (fail $ "unknown symbol: " ++ name) return (lookup name table)
+
+putCode x = do
+    (_, handle) <- getState
+    liftIO $ (hPutStr handle) x
+
+die err = do
+    hPutStrLn stderr err
+    exitFailure
+
+makePair [a, b] = (a, b)
