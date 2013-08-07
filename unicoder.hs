@@ -1,4 +1,5 @@
 {-------------------------------------------------------------------------------
+Unicoder v0.2.0
 Copyright (c) 2013, Okuno Zankoku
 All rights reserved. 
 
@@ -65,25 +66,23 @@ type Lookup = [(String, String)]
 type Parser a = ParsecT String (Lookup, Handle) IO a
 
 cleaner :: Parser ()
-cleaner = many (replace <|> anything <|> inString) >> eof
+cleaner = many (anything <|> try replace <|> backslash) >> eof
 
 anything :: Parser ()
-anything = many1 (noneOf "\\\"") >>= putCode >> return ()
+anything = many1 (noneOf "\\") >>= putCode >> return ()
 
 replace :: Parser ()
-replace = char '\\' >> (decodeNum <|> decodeKey) >>= putCode >> optional (char '.')
-    where decodeNum = many1 digit  >>= return . (:"") . chr . read
-          decodeKey = many1 letter >>= lookupCode
-
-inString :: Parser ()
-inString = between quote quote $ many (anything <|> escape) >> return ()
-    where quote  = char '"'  >>= putCode . (:"")
-          escape = char '\\' >>= putCode . (:"") >> anyChar >>= putCode . (:"")
-
-
-lookupCode name = do
+replace = do
+    char '\\'
+    name <- many1 letter
+    delim <- char '.' <|> space <|> (eof >> return '\n')
     (table, _) <- getState
-    maybe (fail $ "unknown symbol: " ++ name) return (lookup name table)
+    case lookup name table of
+        Nothing -> putCode $ "\\" ++ name ++ [delim]
+        Just val -> putCode $ val ++ if delim == '.' then "" else delim:""
+
+backslash :: Parser ()
+backslash = char '\\' >> putCode "\\"
 
 putCode x = do
     (_, handle) <- getState

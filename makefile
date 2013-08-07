@@ -4,7 +4,7 @@
 all: unicoder
 
 clean:
-	rm unicoder unicoder.o unicoder.hi
+	rm unicoder unicoder.o unicoder.hi test_results
 
 install: unicoder /etc/zankoku-okuno/unicoder/
 	cp ./symbols.conf /etc/zankoku-okuno/unicoder/
@@ -16,6 +16,14 @@ remove:
 
 unicoder: ./unicoder.hs
 	ghc $^
+
+check: unicoder test_results
+	./unicoder test_results
+	cat test_results
+
+
+test_results: test
+	cp test test_results
 
 /etc/zankoku-okuno/unicoder/: /etc/zankoku-okuno/
 	mkdir $@
