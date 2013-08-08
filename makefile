@@ -1,17 +1,18 @@
 
-.PHONY: all clean install remove
+.PHONY: all clean install remove purge
 
 all: unicoder
 
 clean:
 	rm unicoder unicoder.o unicoder.hi test_results
 
-install: unicoder /etc/zankoku-okuno/unicoder/
-	cp ./symbols.conf /etc/zankoku-okuno/unicoder/
+install: unicoder
+	cp -r zankoku-okuno/ /etc/
 	cp unicoder /usr/bin/
 
+purge: remove
+	rm /etc/zankoku-okuno/unicoder/*.conf
 remove:
-	rm /etc/zankoku-okuno/unicoder/symbols.conf
 	rm /usr/bin/unicoder
 
 unicoder: ./unicoder.hs
@@ -24,8 +25,3 @@ check: unicoder test_results
 
 test_results: test
 	cp test test_results
-
-/etc/zankoku-okuno/unicoder/: /etc/zankoku-okuno/
-	mkdir $@
-/etc/zankoku-okuno/:
-	mkdir $@

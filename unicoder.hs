@@ -32,23 +32,27 @@ import System.Environment
 import System.IO
 import System.Directory
 import System.Exit
+import System.Console.GetOpt
 import Data.Char
 import Text.Parsec
 import Text.Parsec.Combinator
 import Text.Parsec.Char
 import Control.Monad.IO.Class
 
-
-symbolFile = "/etc/zankoku-okuno/unicoder/symbols.conf"
+progVersion = "v0.2.0"
+symbolFile Options { optConfig = which } = "/etc/zankoku-okuno/unicoder/" ++ which ++ ".conf"
 
 main :: IO ()
 main = do
-    symbols <- return . map makePair . filter (\x -> length x == 2) . map words . lines =<< readFile symbolFile
-    args <- getArgs
-    if args == []
-      then die "no input files"
-      else mapM (mainLoop symbols) args
-    exitSuccess
+        (opts, args) <- getOptions
+        symbols <- return . parseSymbols =<< readFile (symbolFile opts)
+        putErrLn $ show opts
+        -- TODO -o/--output flag, but how for many files?
+        if args == []
+          then die "no input files"
+          else mapM (mainLoop symbols) args
+        exitSuccess
+    where parseSymbols = map makePair . filter ((==2) . length) . map words . lines
 
 mainLoop :: Lookup -> FilePath -> IO ()    
 mainLoop symbols filename = do
@@ -59,7 +63,7 @@ mainLoop symbols filename = do
         case result of
             Left err -> die (show err)
             Right val -> renameFile tmpname filename
-    where tmpname = filename ++ ".tmp"
+    where tmpname = filename ++ ".tmp" -- FIXME use a real tmp file
 
 
 type Lookup = [(String, String)]
@@ -67,29 +71,70 @@ type Parser a = ParsecT String (Lookup, Handle) IO a
 
 cleaner :: Parser ()
 cleaner = many (anything <|> try replace <|> backslash) >> eof
-
-anything :: Parser ()
-anything = many1 (noneOf "\\") >>= putCode >> return ()
-
-replace :: Parser ()
-replace = do
-    char '\\'
-    name <- many1 letter
-    delim <- char '.' <|> space <|> (eof >> return '\n')
-    (table, _) <- getState
-    case lookup name table of
-        Nothing -> putCode $ "\\" ++ name ++ [delim]
-        Just val -> putCode $ val ++ if delim == '.' then "" else delim:""
-
-backslash :: Parser ()
-backslash = char '\\' >> putCode "\\"
-
-putCode x = do
-    (_, handle) <- getState
-    liftIO $ (hPutStr handle) x
+    where
+    anything = many1 (noneOf "\\") >>= putCode >> return ()
+    replace = do
+        char '\\'
+        name <- many1 letter
+        delim <- char '.' <|> space <|> (eof >> return '\n')
+        (table, _) <- getState
+        case lookup name table of
+            Nothing -> fail ""
+            Just val -> putCode $ val ++ if delim == '.' then "" else delim:""
+    backslash = char '\\' >> putCode "\\"
+    putCode x = do
+        (_, handle) <- getState
+        liftIO $ (hPutStr handle) x
 
 die err = do
-    hPutStrLn stderr err
+    putErrLn err
     exitFailure
 
 makePair [a, b] = (a, b)
+putErrLn = hPutStrLn stderr
+
+-- The following architecture is taken from http://www.haskell.org/haskellwiki/High-level_option_handling_with_GetOpt
+
+data Options = Options  { optConfig :: String
+                        , optOutput :: Maybe FilePath
+                        } deriving (Show)
+startOptions = Options  { optConfig = "default"
+                        , optOutput = Nothing
+                        }
+
+getOptions :: IO (Options, [FilePath])
+getOptions = do
+    (actions, args, errors) <- return . getOpt Permute options =<< getArgs
+    if errors == []
+      then do
+        opts <- foldl (>>=) (return startOptions) actions
+        return (opts, args)
+      else do
+        mapM putErrLn errors
+        exitFailure
+
+options :: [OptDescr (Options -> IO Options)]
+options =
+    [ Option "c" ["config"]
+        (ReqArg 
+            (\arg opt -> return opt { optConfig = arg })
+            "file")
+        "Specify a configuration (usually a programming language)."
+
+    , Option "V" ["version"]
+        (NoArg
+            (\_ -> do
+                hPutStrLn stderr progVersion
+                exitWith ExitSuccess))
+        "Print version"
+    , Option "h" ["help"]
+        (NoArg
+            (\_ -> do
+                prg <- getProgName
+                putErrLn "Ease input of unicode glyphs."
+                putErrLn "This program is lisenced under the 3-clause BSD lisence."
+                putErrLn (usageInfo (prg ++ " [options] files...") options)
+                exitWith ExitSuccess))
+        "Show help"
+    ]
+

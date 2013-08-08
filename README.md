@@ -15,20 +15,19 @@ but does no replacement if the name is undefined. The purpose of the dot is to
 separate names from the following other letters. Really, just see the examples 
 and everything will be clear.
 
-The symbol configuration file is assumed to be in 
-`/etc/zankoku-okuno/unicoder/symbols.conf`. The format is simple: each 
-non-blank line contains an alphabetic name, some whitespace, then the 
-replacement unicode text.
+The symbol configuration files are stored under `/etc/zankoku-okuno/unicoder/` 
+and have a `.conf` extension. The format is simple: each non-blank line 
+contains an alphabetic name, some whitespace, then the replacement unicode text.
 
 Rather than providing the user a load of options, I expect users to hack the 
 code if they need something customized. As you can see, the codebase is neither 
-large nor complex. Perhaps the most common customization will be changing where 
-to look for a symbol file.
+large nor complex. The one option I have added is to select between different 
+configuration files.
 
 Examples
 --------
 
-Assuming a symbols.conf that looks like this:
+Assuming a confif file that looks like this:
 
 ```
 lambda λ
@@ -66,12 +65,15 @@ Even in something as simple as this, you may want to be aware of a few facts:
  * Whitespace or dot is needed after any replacement. `\lambda(x)` is not 
    replaced with `λ(x)`. Use `\lambda.(x)` in this case, and the dot will 
    gladly disappear.
- * When a replacement is made at the end of a file, a newline is added. This 
-   really shouldn't hurt anything, which is exactly when you know unicoder will 
-   in fact hurt something.
  * Beware of adding names like `n` or `t` in your config file. If you are using 
    a language that isn't esoteric, you will probably change the meaning of your 
    code.
+ * It _is_ still possible to mess up strings. For example, `"\neq."` → `"≠"` 
+   instead of being equivalent to `"\n" ++ "eq."`. I conjecture that there is 
+   no way to solve this problem without sacrificing idempotence.
+ * When a replacement is made at the end of a file, a newline is added. This 
+   really shouldn't hurt anything, which is exactly when you know unicoder will 
+   in fact hurt something.
  * I've made no attempt to ensure safety, other than using Haskell. Make 
    backups if you are wary (and you editor doesn't already).
 
@@ -79,6 +81,13 @@ Thankfully, the pitfalls are realistically enumerable.
 
 Changes
 =======
+
+v0.3.0
+------
+
+ * More than one configuration file can be stored and selected between on the 
+   command line.
+ * The role of `symbols.conf` is now dealt with by `default.conf`.
 
 v0.2.0
 ------
