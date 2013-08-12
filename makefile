@@ -7,8 +7,8 @@ clean:
 	rm unicoder unicoder.o unicoder.hi test_results
 
 install: unicoder
-	cp -r zankoku-okuno/ /etc/
-	cp unicoder /usr/bin/
+	cp -r zankoku-okuno /etc
+	cp unicoder /usr/bin
 
 purge: remove
 	rm /etc/zankoku-okuno/unicoder/*.conf
