@@ -46,7 +46,6 @@ main :: IO ()
 main = do
         (opts, args) <- getOptions
         symbols <- return . parseSymbols =<< readFile (symbolFile opts)
-        putErrLn $ show opts
         -- TODO -o/--output flag, but how for many files?
         if args == []
           then die "no input files"
