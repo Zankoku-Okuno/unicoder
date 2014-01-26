@@ -33,53 +33,67 @@ import System.IO
 import System.Directory
 import System.Exit
 import System.Console.GetOpt
+import Data.List (nub)
 import Data.Char
 import Text.Parsec
 import Text.Parsec.Combinator
 import Text.Parsec.Char
+import Control.Monad
 import Control.Monad.IO.Class
 
-progVersion = "v0.2.0"
+progVersion = "v0.3.0"
 symbolFile Options { optConfig = which } = "/etc/zankoku-okuno/unicoder/" ++ which ++ ".conf"
 
 main :: IO ()
 main = do
         (opts, args) <- getOptions
-        symbols <- return . parseSymbols =<< readFile (symbolFile opts)
+        (config, symbols) <- parseSymbols =<< readFile (symbolFile opts)
         -- TODO -o/--output flag, but how for many files?
         if args == []
           then die "no input files"
-          else mapM (mainLoop symbols) args
+          else mapM (mainLoop config symbols) args
         exitSuccess
-    where parseSymbols = map makePair . filter ((==2) . length) . map words . lines
+    where
+    parseSymbols input = case lines input of --exclude ((==0) . length) line input
+        (top:rest) -> do
+            config <- processTop top
+            return (config, processSymbols rest)
+        _ -> die "bad configuration: missing allowed characters"
+    processTop line = case words line of
+        [] -> die "missing allowed characters"
+        [chars] -> return (chars, Nothing)
+        [delim, chars] -> return (chars, Just delim)
+        _ -> die "too many fields on top line"
+    processSymbols = map makePair . filter ((==2) . length) . map words
 
-mainLoop :: Lookup -> FilePath -> IO ()    
-mainLoop symbols filename = do
+mainLoop :: Config -> Lookup -> FilePath -> IO ()    
+mainLoop config symbols filename = do
         source <- readFile filename
         handle <- openFile tmpname WriteMode
-        result <- runPT cleaner (symbols, handle) filename source
+        result <- runPT (cleaner config) (symbols, handle) filename source
         hClose handle
         case result of
             Left err -> die (show err)
             Right val -> renameFile tmpname filename
     where tmpname = filename ++ ".tmp" -- FIXME use a real tmp file
 
-
+type Config = (String, Maybe String)
 type Lookup = [(String, String)]
 type Parser a = ParsecT String (Lookup, Handle) IO a
 
-cleaner :: Parser ()
-cleaner = many (anything <|> try replace <|> backslash) >> eof
+cleaner :: Config -> Parser ()
+cleaner (chars, delim) = many (anything <|> try replace <|> backslash) >> eof
     where
-    anything = many1 (noneOf "\\") >>= putCode >> return ()
+    anything = many1 (noneOf "\\") >>= putCode
     replace = do
-        char '\\'
-        name <- many1 letter
-        delim <- char '.' <|> space <|> (eof >> return '\n')
+        name <- char '\\' >> many1 (oneOf chars)
+        case delim of
+            Nothing -> return ()
+            Just delim -> optional . void $  try (string delim)
         (table, _) <- getState
         case lookup name table of
             Nothing -> fail ""
-            Just val -> putCode $ val ++ if delim == '.' then "" else delim:""
+            Just val -> putCode val
     backslash = char '\\' >> putCode "\\"
     putCode x = do
         (_, handle) <- getState
