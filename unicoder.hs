@@ -1,6 +1,6 @@
 {-------------------------------------------------------------------------------
-Unicoder v0.2.0
-Copyright (c) 2013, Okuno Zankoku
+Unicoder v0.3.1
+Copyright (c) 2013, 2014, Okuno Zankoku
 All rights reserved. 
 
 Redistribution and use in source and binary forms, with or without
@@ -41,8 +41,11 @@ import Text.Parsec.Char
 import Control.Monad
 import Control.Monad.IO.Class
 
-progVersion = "v0.3.0"
-symbolFile Options { optConfig = which } = "/etc/zankoku-okuno/unicoder/" ++ which ++ ".conf"
+progVersion = "v0.3.1"
+symbolFile Options { optConfig = which } = 
+    if '/' `elem` which
+        then which
+        else "/etc/zankoku-okuno/unicoder/" ++ which ++ ".conf"
 
 main :: IO ()
 main = do
@@ -54,7 +57,7 @@ main = do
           else mapM (mainLoop config symbols) args
         exitSuccess
     where
-    parseSymbols input = case lines input of --exclude ((==0) . length) line input
+    parseSymbols input = case lines input of
         (top:rest) -> do
             config <- processTop top
             return (config, processSymbols rest)
@@ -75,7 +78,7 @@ mainLoop config symbols filename = do
         case result of
             Left err -> die (show err)
             Right val -> renameFile tmpname filename
-    where tmpname = filename ++ ".tmp" -- FIXME use a real tmp file
+    where tmpname = filename ++ ".unicoder.tmp" -- FIXME use a real tmp file
 
 type Config = (String, Maybe String)
 type Lookup = [(String, String)]
@@ -147,6 +150,14 @@ options =
                 putErrLn "Ease input of unicode glyphs."
                 putErrLn "This program is lisenced under the 3-clause BSD lisence."
                 putErrLn (usageInfo (prg ++ " [options] files...") options)
+                putErrLn "Run on one or more files to replace special sequences of characters (as defined in a config file) with replacements."
+                putErrLn "The idea is to put in useful unicode symbols and then use those symbols in source code."
+                putErrLn " -- Config Files"
+                putErrLn "    Configuration files are stored in `/etc/zankoku-okuno/unicoder`, and end in `.conf`."
+                putErrLn "    Passing a file to `-c` that contains a slash will use exactly the file you specify, instead of looking one up."
+                putErrLn "    Configuration files consist of a top line and a body. The body is simply a database with two whitespace-separated fields. \
+                             \The first is the a name, and the second is the replacement. The top line contains one or two whitespace-separated fields. \
+                             \The first (optional) is a separator, which is optionally consumed after matching a name in the database. The second holds all the characters than can be used to define and use a name."
                 exitWith ExitSuccess))
         "Show help"
     ]

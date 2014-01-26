@@ -19,7 +19,7 @@ unicoder: ./unicoder.hs
 	ghc $^
 
 check: unicoder test_results
-	./unicoder test_results
+	./unicoder -c zankoku-okuno/unicoder/default.conf test_results
 	cat test_results
 
 

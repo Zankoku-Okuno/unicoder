@@ -10,14 +10,17 @@ Note that when cleaning `somefile`, `somefile.tmp` is created, which may
 overwrite something you wanted to keep around. You have been warned.
 
 Entering a unicode character is now as easy as writing something that matches 
-'/\\\w+(\s|\.|$)' and running unicoder. The name is looked up in a config file, 
-but does no replacement if the name is undefined. The purpose of the dot is to 
-separate names from the following other letters. Really, just see the examples 
-and everything will be clear.
+'/\\\w+(\s|\{\}|$)' and running unicoder, though the actual regex is
+configurable. The name is looked up in a config file, but does no replacement 
+if the name is undefined. The purpose of the braces is to separate names from 
+the following other letters. Really, just see the examples and everything will 
+be clear.
 
 The symbol configuration files are stored under `/etc/zankoku-okuno/unicoder/` 
 and have a `.conf` extension. The format is simple: each non-blank line 
 contains an alphabetic name, some whitespace, then the replacement unicode text.
+If you want to use a config file stored in a different location, make sure
+there's a slash in the filepath you pass.
 
 Rather than providing the user a load of options, I expect users to hack the 
 code if they need something customized. As you can see, the codebase is neither 
@@ -30,6 +33,8 @@ Examples
 Assuming a confif file that looks like this:
 
 ```
+. abcdefghijklmnopqrstuvwxyz
+
 lambda λ
 pi π
 ```
@@ -62,19 +67,13 @@ Pitfalls
 
 Even in something as simple as this, you may want to be aware of a few facts:
 
- * Whitespace or dot is needed after any replacement. `\lambda(x)` is not 
-   replaced with `λ(x)`. Use `\lambda.(x)` in this case, and the dot will 
-   gladly disappear.
  * Beware of adding names like `n` or `t` in your config file. If you are using 
    a language that isn't esoteric, you will probably change the meaning of your 
    code.
- * It _is_ still possible to mess up strings. For example, `"\neq."` → `"≠"` 
-   instead of being equivalent to `"\n" ++ "eq."`. I conjecture that there is 
+ * It _is_ still possible to mess up strings. For example, `"\neq"` → `"≠"` 
+   instead of being equivalent to `"\n" ++ "eq"`. I conjecture that there is 
    no way to solve this problem without sacrificing idempotence.
- * When a replacement is made at the end of a file, a newline is added. This 
-   really shouldn't hurt anything, which is exactly when you know unicoder will 
-   in fact hurt something.
- * I've made no attempt to ensure safety, other than using Haskell. Make 
+ * I've made little attempt to ensure safety, other than using Haskell. Make 
    backups if you are wary (and you editor doesn't already).
 
 Thankfully, the pitfalls are realistically enumerable.
@@ -82,12 +81,20 @@ Thankfully, the pitfalls are realistically enumerable.
 Changes
 =======
 
+v0.3.1
+------
+ * Use config files from locations other than `/etc/zanoku-okuno/unicoder/`.
+ * Use a `.unicoder.tmp` extension instead of `.tmp` so that there's less
+   chance of name-collision with the tempfile.
+
 v0.3.0
 ------
-
+ * Each configuration file can specify separator string and valid name
+   characters.
  * More than one configuration file can be stored and selected between on the 
    command line.
  * The role of `symbols.conf` is now dealt with by `default.conf`.
+ * No more extra newline at end of file
 
 v0.2.0
 ------
