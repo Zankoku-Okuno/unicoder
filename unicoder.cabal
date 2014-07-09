@@ -2,10 +2,14 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                unicoder
-version:             0.3.2-alpha
-synopsis:            Write in unicode without complexity.
+version:             0.4.0-alpha
+synopsis:            Make writing in unicode easy.
 description:         Unicoder transforms text documents, replacing simple patterns with
                      unicode equivalents. The patterns can be easily configured by the user.
+                     This package is especially meant to open the vast and expressive array
+                     of unicode identifiers to programmers and language designers, but there's
+                     nothing wrong with a technically savvy user putting unicoder to work
+                     on documents for human consumption.
                      .
                      With the default settings,
                      .
@@ -28,7 +32,7 @@ license:             BSD3
 license-file:        LICENSE
 author:              Zankoku Okuno
 maintainer:          zankoku.okuno@gmail.com
--- copyright:           
+copyright:           Copyright © 2013, 2014, Okuno Zankoku
 category:            Text
 build-type:          Simple
 cabal-version:       >=1.8
@@ -46,6 +50,7 @@ executable unicoder
 library
   exposed-modules:     Text.Unicoder
   build-depends:       base ==4.6.*,
+                       text ==0.11.*,
                        mtl ==2.*,
                        parsec ==3.*,
                        directory ==1.2.*

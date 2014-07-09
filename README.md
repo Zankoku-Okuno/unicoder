@@ -6,18 +6,17 @@ allow ascii interfaces to be able to insert unicode easily, thus enabling
 nice-looking programming language syntax. The replacements overwrite the 
 original file.
 
-Note that when cleaning `somefile`, `somefile.tmp` is created, which may 
+Note that when cleaning `somefile`, `somefile.unicoder.tmp` is created, which may 
 overwrite something you wanted to keep around. You have been warned.
 
 Entering a unicode character is now as easy as writing something that matches 
-'/\\\w+(\s|\{\}|$)' and running unicoder, though the actual regex is
+`/\\\w+(\s|\{\}|$)/` and running unicoder, though the actual regex is
 configurable. The name is looked up in a config file, but does no replacement 
 if the name is undefined. The purpose of the braces is to separate names from 
 the following other letters. Really, just see the examples and everything will 
 be clear.
 
-The symbol configuration files are stored under `/etc/zankoku-okuno/unicoder/` 
-and have a `.conf` extension. The format is simple: each non-blank line 
+The format for configuration files is simple: each non-blank line 
 contains an alphabetic name, some whitespace, then the replacement unicode text.
 If you want to use a config file stored in a different location, make sure
 there's a slash in the filepath you pass.
@@ -30,7 +29,7 @@ configuration files.
 Examples
 --------
 
-Assuming a confif file that looks like this:
+Assuming a config file that looks like this:
 
 ```
 . abcdefghijklmnopqrstuvwxyz
@@ -74,7 +73,7 @@ Even in something as simple as this, you may want to be aware of a few facts:
    instead of being equivalent to `"\n" ++ "eq"`. I conjecture that there is 
    no way to solve this problem without sacrificing idempotence.
  * I've made little attempt to ensure safety, other than using Haskell. Make 
-   backups if you are wary (and you editor doesn't already).
+   backups if you are wary (and your editor doesn't already).
 
 Thankfully, the pitfalls are realistically enumerable.
 
