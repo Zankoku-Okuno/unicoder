@@ -1,5 +1,4 @@
 {-------------------------------------------------------------------------------
-Unicoder v0.3.1
 Copyright (c) 2013, 2014, Okuno Zankoku
 All rights reserved. 
 
@@ -39,22 +38,23 @@ import Text.Parsec
 import Text.Parsec.Combinator
 import Text.Parsec.Char
 import Control.Monad
-import Control.Monad.IO.Class
+import Control.Monad.Trans
 
-progVersion = "v0.3.1"
+import Paths_unicoder
+import Data.Version
+
+symbolFile :: Options -> IO FilePath
 symbolFile Options { optConfig = which } = 
     if '/' `elem` which
-        then which
-        else "/etc/zankoku-okuno/unicoder/" ++ which ++ ".conf"
+        then return which
+        else getDataFileName (which ++ ".conf")
 
 main :: IO ()
 main = do
         (opts, args) <- getOptions
-        (config, symbols) <- parseSymbols =<< readFile (symbolFile opts)
+        (config, symbols) <- parseSymbols =<< readFile =<< symbolFile opts
         -- TODO -o/--output flag, but how for many files?
-        if args == []
-          then die "no input files"
-          else mapM (mainLoop config symbols) args
+        mapM (mainLoop config symbols) args
         exitSuccess
     where
     parseSymbols input = case lines input of
@@ -71,6 +71,7 @@ main = do
 
 mainLoop :: Config -> Lookup -> FilePath -> IO ()    
 mainLoop config symbols filename = do
+    --I think I can make use of lazy text and Haskell's inherent laziness to strem a file through
         source <- readFile filename
         handle <- openFile tmpname WriteMode
         result <- runPT (cleaner config) (symbols, handle) filename source
@@ -109,7 +110,6 @@ die err = do
 makePair [a, b] = (a, b)
 putErrLn = hPutStrLn stderr
 
--- The following architecture is taken from http://www.haskell.org/haskellwiki/High-level_option_handling_with_GetOpt
 
 data Options = Options  { optConfig :: String
                         , optOutput :: Maybe FilePath
@@ -124,6 +124,7 @@ getOptions = do
     if errors == []
       then do
         opts <- foldl (>>=) (return startOptions) actions
+        when (null args) $ die "no input files"
         return (opts, args)
       else do
         mapM putErrLn errors
@@ -140,9 +141,15 @@ options =
     , Option "V" ["version"]
         (NoArg
             (\_ -> do
-                hPutStrLn stderr progVersion
-                exitWith ExitSuccess))
-        "Print version"
+                hPutStrLn stderr (showVersion version)
+                exitSuccess))
+        "Print version."
+    , Option "" ["show-config-dir"]
+        (NoArg
+            (\_ -> do
+                hPutStrLn stderr =<< getDataFileName ""
+                exitSuccess))
+        "Print directory where configuration files are stored."
     , Option "h" ["help"]
         (NoArg
             (\_ -> do
@@ -158,7 +165,7 @@ options =
                 putErrLn "    Configuration files consist of a top line and a body. The body is simply a database with two whitespace-separated fields. \
                              \The first is the a name, and the second is the replacement. The top line contains one or two whitespace-separated fields. \
                              \The first (optional) is a separator, which is optionally consumed after matching a name in the database. The second holds all the characters than can be used to define and use a name."
-                exitWith ExitSuccess))
+                exitSuccess))
         "Show help"
     ]
 
