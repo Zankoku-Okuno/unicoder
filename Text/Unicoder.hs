@@ -30,7 +30,7 @@ unicodizeStr :: Config -> String -> String
 unicodizeStr config = T.unpack . unicodize config . T.pack
 
 
-data Config = Config { _idChars      :: (Char -> Bool)
+data Config = Config { _idChars      :: Char -> Bool
                      , _beginMark    :: Text
                      , _endMark      :: Maybe Text
                      , _betweenMarks :: Maybe (Text, Text)
@@ -46,28 +46,28 @@ parseConfigFile path = withFile path ReadMode $ \fp -> do
         (lexer:raw_macros) -> do
             --TODO configure begin mark
             emptyConfig <- case filter (not . T.null) $ T.splitOn " " lexer of
-                [idChars] -> return $
+                [idChars] -> return
                     Config { _idChars = inClass (T.unpack idChars)
                            , _beginMark = "\\"
                            , _endMark = Nothing
                            , _betweenMarks = Nothing
                            , _macros0 = [], _macros1 = []
                            }
-                [begin, idChars] -> return $
+                [begin, idChars] -> return
                     Config { _idChars = inClass (T.unpack idChars)
                            , _beginMark = begin
                            , _endMark = Nothing
                            , _betweenMarks = Nothing
                            , _macros0 = [], _macros1 = []
                            }
-                [begin, end, idChars] -> return $
+                [begin, end, idChars] -> return
                     Config { _idChars = inClass (T.unpack idChars)
                            , _beginMark = begin
                            , _endMark = Just end
                            , _betweenMarks = Nothing
                            , _macros0 = [], _macros1 = []
                            }
-                [begin, end, open, close, idChars] -> return $
+                [begin, end, open, close, idChars] -> return
                     Config { _idChars = inClass (T.unpack idChars)
                            , _beginMark = begin
                            , _endMark = Just end
@@ -93,7 +93,7 @@ xform config = mconcat <$> many (passthrough <|> macro <|> strayBegin) <* endOfI
     macro = do
         string beginStr
         full <|> half
-    strayBegin = T.singleton <$> char (beginChr)
+    strayBegin = T.singleton <$> char beginChr
     full = do
         name <- takeWhile1 (_idChars config)
         mono name <|> di name

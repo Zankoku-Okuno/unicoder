@@ -25,7 +25,7 @@ main = do
             Nothing -> die "bad configuration file"
             Just config -> return config
         -- TODO -o/--output flag, but how for many files?
-        mapM (mainLoop config) args
+        mapM_ (mainLoop config) args
         exitSuccess
 
 mainLoop :: Config -> FilePath -> IO ()    
@@ -53,13 +53,13 @@ startOptions = Options  { optConfig = "default"
 getOptions :: IO (Options, [FilePath])
 getOptions = do
     (actions, args, errors) <- return . getOpt Permute options =<< getArgs
-    if errors == []
+    if null errors
       then do
         opts <- foldl (>>=) (return startOptions) actions
         when (null args) $ die "no input files"
         return (opts, args)
       else do
-        mapM putErrLn errors
+        mapM_ putErrLn errors
         exitFailure
 
 options :: [OptDescr (Options -> IO Options)]

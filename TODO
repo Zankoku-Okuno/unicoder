@@ -1,8 +1,3 @@
-* real temp file
-* cabalize
-* make suitable for a library
-* validchars/separator should be put in a reader
-* look into single-arg macro-izing:
-	config: `floor ⌊ ⌋`
-	file: `\floor{x}` ---> `⌊x⌋`
-	file: `\floor{ x }` ---> `⌊ x ⌋`
+* deeper documentation (specify config file syntax and how that translates to replacement syntax)
+* `#include` other symbol tables (but the lexer stays the same)
+* set up `cabal test` and Travis CI
