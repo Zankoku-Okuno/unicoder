@@ -53,16 +53,23 @@ parseConfigFile path = withFile path ReadMode $ \fp -> do
                            , _betweenMarks = Nothing
                            , _macros0 = [], _macros1 = []
                            }
-                [end, idChars] -> return $
+                [begin, idChars] -> return $
                     Config { _idChars = inClass (T.unpack idChars)
-                           , _beginMark = "\\"
+                           , _beginMark = begin
+                           , _endMark = Nothing
+                           , _betweenMarks = Nothing
+                           , _macros0 = [], _macros1 = []
+                           }
+                [begin, end, idChars] -> return $
+                    Config { _idChars = inClass (T.unpack idChars)
+                           , _beginMark = begin
                            , _endMark = Just end
                            , _betweenMarks = Nothing
                            , _macros0 = [], _macros1 = []
                            }
-                [end, open, close, idChars] -> return $
+                [begin, end, open, close, idChars] -> return $
                     Config { _idChars = inClass (T.unpack idChars)
-                           , _beginMark = "\\"
+                           , _beginMark = begin
                            , _endMark = Just end
                            , _betweenMarks = Just (open, close)
                            , _macros0 = [], _macros1 = []
