@@ -16,6 +16,9 @@ but that's why we've allowed for configuration of each of the special marks as
 well as the identifier character set, so Unicoder can be relevant to any type of
 text data.
 
+There's a detailed explanation of the unicoder algorithm and configuration on our
+[Viewdocs](http://zankoku-okuno.viewdocs.io/unicoder/specs.md). It's fairly likely
+that the system can be deduced just from examples, though.
 
 Examples
 --------

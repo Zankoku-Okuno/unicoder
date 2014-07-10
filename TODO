@@ -1,3 +1,2 @@
-* deeper documentation (specify config file syntax and how that translates to replacement syntax)
 * `#include` other symbol tables (but the lexer stays the same)
 * set up `cabal test` and Travis CI

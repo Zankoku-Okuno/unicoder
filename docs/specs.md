@@ -1,7 +1,7 @@
 Unicoder Specification
 ======================
 
-Unicoder simplies the input of unicode characers not immediately accessible from the keyboard.
+Unicoder simplifies the input of unicode characters not immediately accessible from the keyboard.
 Usually, a few examples are enough to show how unicoder can be used.
 This document goes in-depth to explain the details of unicoder's behavior and how it can be configured.
 
@@ -11,11 +11,11 @@ In this document, we make use of a BNF grammar extended by Perl-style regular ex
 Configuration File
 ------------------
 
-Since keyboards and textual formats vary, nearly every peice of unicoder is configurable.
+Since keyboards and textual formats vary, nearly every piece of unicoder is configurable.
 
 Configuration consist of a set of marks and a list of replacements.
 
-Each mark is a peice of text not containing whitespace. The four marks are called
+Each mark is a piece of text not containing whitespace. The four marks are called
 `begin-mark`, `end-mark`, `open-mark` and `close-mark`. Once configured, they will
 be used to generate the [conversion grammar](#user-content-conversion-algorithm).
 
@@ -32,30 +32,38 @@ config ::= lexer newline *(definition | ignore-line)
 lexer ::= [ begin-mark [space end-mark] space ]
           [ open-mark space close-mark space ]
           key-name-range
+key-name-range ::= /-?([^\s-]|\S-\S)*-?/
+                   ;; A single character or a character range (e.g. 'a-z').
+                   ;; A literal dash may be given at either end.
 definition ::= key-name space value newline
             |  key-name space open-value space close-value newline
             |  '#include' space value newline
 ignore-line ::= /.*/ newline
 
-begin-mark, end-mark, open-mark, close-mark ::= text
-key-name ::= /[$(key-name-range)]+/  ;; one or more characters included in key-name-range setting
-value, open-value, close-value ::= text
+begin-mark,
+  end-mark,
+  open-mark,
+  close-mark ::= text
+key-name ::= /[$(key-name-range)]+/
+             ;; one or more characters included in key-name-range setting
+value,
+  open-value,
+  close-value ::= text
+
 text           ::= /\S+/
 space          ::= /\s+/
 newline        ::= /[\n\r]+/
-key-name-range ::= /-?([^\s-]|\S-\S)*-?/  ;; A single character or a character range (X-X).
-                                          ;; A literal dash may be given at either end.
 ```
 
-When `begin-mark` is not explicitly intialized it takes its default: `\`. If no replacements are given, then the lookup table remains empty. All other settings are only initialized when explicitly given.
+When `begin-mark` is not explicitly initialized it takes `\` (backslash) as its default. If no replacements are given, then the lookup table remains empty. All other settings are only initialized when explicitly given.
 
 Conversion Algorithm
 --------------------
 
-Unicodizing a piece of text works by repeatedly applying the following grammar to the prefix of text. The matched prefix is consumed from the input and a replacement output is generated.
+Unicodizing a piece of text works by repeatedly applying the following grammar to the prefix of an input text. The matched prefix is consumed from the input and a replacement output is generated.
 
 The `begin-mark`, `end-mark`, `open-mark`, `close-mark` rules are determined directly from the configuration.
-The `key-one` and `key-two` rules are determined by examining the keys available for one- and-two-part replacements, repsectively. For configuration values which are not initialized, the corresponding rule fails.
+The `key-one` and `key-two` rules are determined by the keys available for one- and two-part replacements, respectively. For configuration values which are not initialized, the corresponding rule fails.
 
 ```
 convert ::= replace-one    ;; convert to value
