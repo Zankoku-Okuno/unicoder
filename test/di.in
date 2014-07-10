@@ -1,0 +1,2 @@
+\bag{foo}
+\{bag\bag{foo}\}bag.

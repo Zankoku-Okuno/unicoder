@@ -43,8 +43,9 @@ executable unicoder
   main-is:             unicoder.hs
   -- other-modules:       
   build-depends:       base ==4.6.*,
+                       text ==0.11.*,
                        mtl ==2.*,
-                       parsec ==3.*,
+                       attoparsec >=0.10.0.0,
                        directory ==1.2.*
 
 library
@@ -52,5 +53,5 @@ library
   build-depends:       base ==4.6.*,
                        text ==0.11.*,
                        mtl ==2.*,
-                       parsec ==3.*,
+                       attoparsec >=0.10.0.0,
                        directory ==1.2.*

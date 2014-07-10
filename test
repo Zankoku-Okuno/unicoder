@@ -1,9 +1,0 @@
-"\n"        from    "\n"
-"\n{}"      from    "\n{}"
-"\nequals"  from    "\nequals"
-"≠"         from    "\neq{}"
-"≠{}"       from    "\neq{}{}"
-\lambdae    from    \lambdae
-λ e         from    \lambda e
-λe          from    \lambda{}e
-λ           from    \lambda

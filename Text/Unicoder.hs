@@ -1,6 +1,6 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Text.Unicoder (
       unicodize
-    , unicodize'
     , unicodizeStr
     , Config
     , parseConfigFile
@@ -8,73 +8,118 @@ module Text.Unicoder (
 
 import System.IO
 
-import qualified Data.Text as ST
-import qualified Data.Text.Lazy as LT
-import qualified Data.Text.Lazy.IO as LT
+import Data.Text (Text)
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
+import Data.Attoparsec.Text
+import Data.Attoparsec.Combinator
 
 import Data.Maybe
 import Data.Either
+import Data.Monoid
 import Control.Applicative
 import Control.Monad
 
 
-unicodize :: Config -> LT.Text -> LT.Text
-unicodize = undefined
-
-unicodize' :: Config -> ST.Text -> ST.Text
-unicodize' = undefined
+unicodize :: Config -> Text -> Text
+unicodize config input = case parseOnly (xform config) input of
+    Left err -> error "unicoder: internal error"
+    Right val -> val
 
 unicodizeStr :: Config -> String -> String
-unicodizeStr config = ST.unpack . unicodize' config . ST.pack
+unicodizeStr config = T.unpack . unicodize config . T.pack
 
 
-data Config = Config { _idChars :: Char -> Bool
-                     , _endMark :: Maybe String
-                     , _betweenMarks :: Maybe (String, String)
-                     , _macros0 :: [(String, String)]
-                     , _macros1 :: [(String, (String, String))]
+data Config = Config { _idChars      :: (Char -> Bool)
+                     , _beginMark    :: Text
+                     , _endMark      :: Maybe Text
+                     , _betweenMarks :: Maybe (Text, Text)
+                     , _macros0      :: [(Text, Text)]
+                     , _macros1      :: [(Text, (Text, Text))]
                      }
 
 parseConfigFile :: FilePath -> IO (Maybe Config)
 parseConfigFile path = withFile path ReadMode $ \fp -> do
-    xs <- filter (not . LT.null) . LT.lines <$> LT.hGetContents fp
+    xs <- filter (not . T.null) . T.lines <$> T.hGetContents fp
     return $ case xs of
         [] -> Nothing
         (lexer:raw_macros) -> do
-            emptyConfig <- case LT.words lexer of
+            --TODO configure begin mark
+            emptyConfig <- case filter (not . T.null) $ T.splitOn " " lexer of
                 [idChars] -> return $
-                    Config { _idChars = parseIdChars (LT.unpack idChars)
+                    Config { _idChars = inClass (T.unpack idChars)
+                           , _beginMark = "\\"
                            , _endMark = Nothing
                            , _betweenMarks = Nothing
                            , _macros0 = [], _macros1 = []
                            }
                 [end, idChars] -> return $
-                    Config { _idChars = parseIdChars (LT.unpack idChars)
-                           , _endMark = Just (LT.unpack end)
+                    Config { _idChars = inClass (T.unpack idChars)
+                           , _beginMark = "\\"
+                           , _endMark = Just end
                            , _betweenMarks = Nothing
                            , _macros0 = [], _macros1 = []
                            }
                 [end, open, close, idChars] -> return $
-                    Config { _idChars = parseIdChars (LT.unpack idChars)
-                           , _endMark = Just (LT.unpack end)
-                           , _betweenMarks = Just (LT.unpack open, LT.unpack close)
+                    Config { _idChars = inClass (T.unpack idChars)
+                           , _beginMark = "\\"
+                           , _endMark = Just end
+                           , _betweenMarks = Just (open, close)
                            , _macros0 = [], _macros1 = []
                            }
                 _ -> Nothing
             let (macros0, macros1) = partitionEithers . catMaybes $ parseMacro <$> raw_macros
-            return $ emptyConfig { _macros0 = macros0 }
+            return $ emptyConfig { _macros0 = macros0, _macros1 = macros1 }
 
-parseIdChars :: String -> (Char -> Bool)
-parseIdChars = go "" []
-    where
-    go singles ranges "" = \c -> c `elem` singles || any (between c) ranges
-    go singles ranges (a:'-':b:rest) = go singles ((a,b):ranges) rest
-    go singles ranges (c:rest) = go (c:singles) ranges rest
-    between c (a, b) = a <= c && c <= b
-
-parseMacro :: LT.Text -> Maybe (Either (String, String) (String, (String, String)))
-parseMacro input = case LT.words input of
-    [k, v] -> Just $ Left (LT.unpack k, LT.unpack v)
-    [k, v1, v2] -> Just $ Right (LT.unpack k, (LT.unpack v1, LT.unpack v2))
+parseMacro :: T.Text -> Maybe (Either (Text, Text) (Text, (Text, Text)))
+parseMacro input = case T.words input of
+    [k, v] -> Just $ Left (k, v)
+    [k, v1, v2] -> Just $ Right (k, (v1, v2))
     _ -> Nothing
 
+
+xform :: Config -> Parser Text
+xform config = mconcat <$> many (passthrough <|> macro <|> strayBegin) <* endOfInput
+    where
+    (beginStr, beginChr) = (_beginMark config, T.head beginStr)
+    passthrough = takeWhile1 (/= beginChr)
+    macro = do
+        string beginStr
+        full <|> half
+    strayBegin = T.singleton <$> char (beginChr)
+    full = do
+        name <- takeWhile1 (_idChars config)
+        mono name <|> di name
+        where
+        mono name = do
+            replace <- name `lookupM` _macros0 config
+            endMark
+            return replace
+        di name = do
+            (open, close) <- betweenMarks
+            (rOpen, rClose) <- name `lookupM` _macros1 config
+            string open
+            inner <- T.pack <$> anyChar `manyTill` string close
+            return $ rOpen <> inner <> rClose
+    half = do
+        (open, close) <- betweenMarks
+        which <- (const fst <$> string open) <|> (const snd <$> string close)
+        name <- takeWhile1 (_idChars config)
+        replace <- which <$> name `lookupM` _macros1 config
+        endMark
+        return replace
+    endMark = case _endMark config of
+        Nothing -> return ()
+        Just end -> option () $ void (string end)
+    betweenMarks = case _betweenMarks config of
+        Nothing -> fail "" 
+        Just x -> return x
+    lookupM k v = maybe (fail "") return (k `lookup` v)
+
+{-TODO
+a config lint 
+    characters don't appear twice in the lexer
+    open and end are distinguishable
+    macros are defined only using idChars
+    macro lines are word-length 2 or 3
+-}
