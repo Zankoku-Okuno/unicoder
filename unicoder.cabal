@@ -32,10 +32,11 @@ maintainer:          zankoku.okuno@gmail.com
 copyright:           Copyright © 2013, 2014, Okuno Zankoku
 category:            Text
 build-type:          Simple
-cabal-version:       >=1.8
+cabal-version:       >=1.9.2
 data-dir:            data
 data-files:          *.conf
-extra-source-files:  README.md, changes.md
+extra-source-files:  README.md, changes.md,
+                     test/*.in, test/*.out, test/test.config
 
 executable unicoder
   main-is:             unicoder.hs
@@ -48,6 +49,13 @@ executable unicoder
 library
   exposed-modules:     Text.Unicoder
   build-depends:       base ==4.6.*,
+                       text ==0.11.*,
+                       attoparsec >=0.10.0.0
+
+Test-Suite test-unicoder
+    type:              exitcode-stdio-1.0
+    main-is:           test/test.hs
+    build-depends:     base ==4.6.*,
                        text ==0.11.*,
                        attoparsec >=0.10.0.0
 
