@@ -1,2 +1,10 @@
+* API documentation
 * `#include` other symbol tables (but the lexer stays the same)
 * set up `cabal test` and Travis CI
+
+
+unicodize inside {}
+put together examples.md for viewdocs
+	config examples
+	mono, di, mono-in-di, half examples
+put together an index for viewdocs

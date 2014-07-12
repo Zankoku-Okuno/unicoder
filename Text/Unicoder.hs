@@ -44,7 +44,6 @@ parseConfigFile path = withFile path ReadMode $ \fp -> do
     return $ case xs of
         [] -> Nothing
         (lexer:raw_macros) -> do
-            --TODO configure begin mark
             emptyConfig <- case filter (not . T.null) $ T.splitOn " " lexer of
                 [idChars] -> return
                     Config { _idChars = inClass (T.unpack idChars)
