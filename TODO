@@ -1,8 +1,0 @@
-* API documentation
-* `#include` other symbol tables (but the lexer stays the same)
-* set up `cabal test` and Travis CI
-
-
-unicodize inside {}
-allow stuff like `\{.foo` to be passed through
-	just allow zero or more idChars instead of 1+

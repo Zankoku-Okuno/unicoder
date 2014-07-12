@@ -1,0 +1,14 @@
+language: haskell
+ghc:
+    - 7.6
+
+install:
+    - cabal install --only-dependencies --enable-tests
+script:
+    - cabal configure --enable-tests && cabal build && cabal test
+
+
+notifications:
+    email:
+        on_success: never
+        on_failure: change

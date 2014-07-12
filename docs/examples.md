@@ -103,7 +103,7 @@ Now that the hard stuff is out of the way, we can move on to the easy task of ad
 
 If you were writing some chess notation, you might like some chess symbols. We can add a simple macro for a white king by adding the line `wN ♘` to the default config. Then we can write `\wN.F3` and obtain `♘F3` in documents.
 
-If we needed a bracketing macro, we simply have two white-space separated replacements on one line, like `magic ᵐ ͪ`. Adding that line to the default config allows us to write `\magic{b}` and obtain `ᵐbͪ`. Just don't ask me what language has a series of pre-nasalized voiced aspirated plosives.
+If we needed a bracketing macro, we simply have two white-space separated replacements on one line, like `magic ᵐ ʰ`. Adding that line to the default config allows us to write `\magic{b}` and obtain `ᵐbʰ`. Just don't ask me what language has a series of pre-nasalized voiced aspirated plosives.
 
 And that's it. The macro-definition syntax is just two or three whitespace-separated strings on one line. The configuration file isn't very strict about formatting. Any line that doesn't fit the syntax is just ignored.
 
