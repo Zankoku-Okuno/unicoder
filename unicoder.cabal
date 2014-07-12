@@ -1,5 +1,6 @@
 name:                unicoder
-version:             0.4.0-alpha
+version:             0.4.0-beta
+stability:           beta
 synopsis:            Make writing in unicode easy.
 description:         Unicoder transforms text documents, replacing simple patterns with
                      unicode equivalents. The patterns can be easily configured by the user.
