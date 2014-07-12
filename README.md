@@ -1,6 +1,8 @@
 Unicoder
 ========
 
+[![Build Status](https://travis-ci.org/Zankoku-Okuno/unicoder.svg?branch=master)](https://travis-ci.org/Zankoku-Okuno/unicoder)
+
 The unicoder reads in a source file and makes replacements in-place. The goal
 is to allow ascii interfaces to be able to insert unicode without taking your
 hands off the keyboard. This can allow for unicode to be entered into source

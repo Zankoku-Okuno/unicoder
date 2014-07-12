@@ -106,7 +106,7 @@ xform config = mconcat <$> many (passthrough <|> macro <|> strayBegin) <* endOfI
             (rOpen, rClose) <- name `lookupM` _macros1 config
             string open
             inner <- T.pack <$> anyChar `manyTill` string close
-            return $ rOpen <> inner <> rClose
+            return $ rOpen <> recurse inner <> rClose
     half = do
         (open, close) <- betweenMarks
         which <- (const fst <$> string open) <|> (const snd <$> string close)
@@ -121,6 +121,7 @@ xform config = mconcat <$> many (passthrough <|> macro <|> strayBegin) <* endOfI
         Nothing -> fail "" 
         Just x -> return x
     lookupM k v = maybe (fail "") return (k `lookup` v)
+    recurse = unicodize config
 
 {-TODO
 a config lint 

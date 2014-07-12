@@ -1,5 +1,5 @@
 name:               unicoder
-version:            0.4.0
+version:            0.4.1
 stability:          beta
 synopsis:           Make writing in unicode easy.
 description:        Unicoder is a command-line tool transforms text documents, replacing simple
@@ -35,7 +35,7 @@ copyright:          Copyright © 2013, 2014, Okuno Zankoku
 author:             Zankoku Okuno
 maintainer:         zankoku.okuno@gmail.com
 homepage:           https://github.com/Zankoku-Okuno/unicoder
-bug-tracker:        https://github.com/Zankoku-Okuno/unicoder/issues
+bug-reports:        https://github.com/Zankoku-Okuno/unicoder/issues
 category:           Text
 build-type:         Simple
 cabal-version:      >=1.9.2
