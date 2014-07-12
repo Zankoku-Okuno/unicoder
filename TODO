@@ -4,7 +4,5 @@
 
 
 unicodize inside {}
-put together examples.md for viewdocs
-	config examples
-	mono, di, mono-in-di, half examples
-put together an index for viewdocs
+allow stuff like `\{.foo` to be passed through
+	just allow zero or more idChars instead of 1+

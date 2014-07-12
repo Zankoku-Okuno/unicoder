@@ -16,9 +16,10 @@ but that's why we've allowed for configuration of each of the special marks as
 well as the identifier character set, so Unicoder can be relevant to any type of
 text data.
 
-There's a detailed explanation of the unicoder algorithm and configuration on our
-[Viewdocs](http://zankoku-okuno.viewdocs.io/unicoder/specs.md). It's fairly likely
-that the system can be deduced just from examples, though.
+There's more documentation on our
+[Viewdocs](http://zankoku-okuno.viewdocs.io/unicoder/).
+If yo're learning to use Unicoder, I would especiallt recommend our
+[examples](http://zankoku-okuno.viewdocs.io/unicoder/examples.md).
 
 Examples
 --------
@@ -97,3 +98,11 @@ Even in something as simple as this, you may want to be aware of a few facts:
 
 Thankfully, the pitfalls are realistically enumerable.
 
+
+Contribute
+==========
+
+Unicoder is in the beta stage. I'm sure there's a bug or two, some cleanup to be
+done, and definitely some missing features. Please add any issues or pull requests
+to our [github](https://github.com/Zankoku-Okuno/unicoder). You can email me, but
+that's usually higher latency than github.

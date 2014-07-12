@@ -9,13 +9,11 @@ description:        Unicoder is a command-line tool transforms text documents, r
                     of unicode identifiers to programmers and language designers, but there's
                     nothing wrong with a technically savvy user putting unicoder to work
                     on documents for human consumption.
-                    Any system of special characters can be made easy to type on any keyboard as
-                    long as unicode supports it. A detailed description of the algorithm and
-                    configuration can be found
-                    <http://zankoku-okuno.viewdocs.io/unicoder/specs.md here>.
+                    Any system of special characters can be made easy to type on any keyboard 
+                    and in any context as long as unicode supports it.
                     .
                     Cabal wants to fight me over typesetting some examples, so check out
-                    <https://github.com/Zankoku-Okuno/unicoder/blob/master/README.md the real docs>
+                    <http://zankoku-okuno.viewdocs.io/unicoder/ the real docs>
                     for a decent look at the features.
                     .
                     In the interests of giving readers /some/ idea whats going on,

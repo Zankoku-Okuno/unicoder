@@ -2,7 +2,7 @@ Unicoder Specification
 ======================
 
 Unicoder simplifies the input of unicode characters not immediately accessible from the keyboard.
-Usually, a few examples are enough to show how unicoder can be used.
+Usually, a [few examples](examples.md) are enough to learn how to use unicoder.
 This document goes in-depth to explain the details of unicoder's behavior and how it can be configured.
 
 In this document, we make use of a BNF grammar extended by Perl-style regular expressions.
