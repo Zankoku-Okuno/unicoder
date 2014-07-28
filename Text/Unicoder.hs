@@ -3,10 +3,14 @@ module Text.Unicoder (
       unicodize
     , unicodizeStr
     , Config
-    , parseConfigFile
+    --, parseConfigFile
+    , locateConfig
+    , loadConfig
+    , parseConfig
     ) where
 
 import System.IO
+import Paths_unicoder
 
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -14,23 +18,28 @@ import qualified Data.Text.IO as T
 import Data.Attoparsec.Text
 import Data.Attoparsec.Combinator
 
-import Data.Maybe
 import Data.Either
+import Data.Maybe
+import Data.List
 import Data.Monoid
 import Control.Applicative
 import Control.Monad
 
 
+{-| Perform the unicoder transformation on a 'Text' value. -}
 unicodize :: Config -> Text -> Text
 unicodize config input = case parseOnly (xform config) input of
     Left err -> error "unicoder: internal error"
     Right val -> val
 
+{-| Perform the unicoder transformation on a 'String' value. -}
 unicodizeStr :: Config -> String -> String
 unicodizeStr config = T.unpack . unicodize config . T.pack
 
 
-data Config = Config { _idChars      :: Char -> Bool
+{-| Aggregate all settings needed to unicodize. -}
+data Config = Config { _fromFile     :: FilePath
+                     , _idChars      :: Char -> Bool
                      , _beginMark    :: Text
                      , _endMark      :: Maybe Text
                      , _betweenMarks :: Maybe (Text, Text)
@@ -38,52 +47,73 @@ data Config = Config { _idChars      :: Char -> Bool
                      , _macros1      :: [(Text, (Text, Text))]
                      }
 
+{-| Load and parse a unicoder config file. -}
 parseConfigFile :: FilePath -> IO (Maybe Config)
 parseConfigFile path = withFile path ReadMode $ \fp -> do
-    xs <- filter (not . T.null) . T.lines <$> T.hGetContents fp
-    return $ case xs of
-        [] -> Nothing
-        (lexer:raw_macros) -> do
-            emptyConfig <- case filter (not . T.null) $ T.splitOn " " lexer of
-                [idChars] -> return
-                    Config { _idChars = inClass (T.unpack idChars)
-                           , _beginMark = "\\"
-                           , _endMark = Nothing
-                           , _betweenMarks = Nothing
-                           , _macros0 = [], _macros1 = []
-                           }
-                [begin, idChars] -> return
-                    Config { _idChars = inClass (T.unpack idChars)
-                           , _beginMark = begin
-                           , _endMark = Nothing
-                           , _betweenMarks = Nothing
-                           , _macros0 = [], _macros1 = []
-                           }
-                [begin, end, idChars] -> return
-                    Config { _idChars = inClass (T.unpack idChars)
-                           , _beginMark = begin
-                           , _endMark = Just end
-                           , _betweenMarks = Nothing
-                           , _macros0 = [], _macros1 = []
-                           }
-                [begin, end, open, close, idChars] -> return
-                    Config { _idChars = inClass (T.unpack idChars)
-                           , _beginMark = begin
-                           , _endMark = Just end
-                           , _betweenMarks = Just (open, close)
-                           , _macros0 = [], _macros1 = []
-                           }
-                _ -> Nothing
-            let (macros0, macros1) = partitionEithers . catMaybes $ parseMacro <$> raw_macros
-            return $ emptyConfig { _macros0 = macros0, _macros1 = macros1 }
+    parseConfig path <$> T.hGetContents fp
 
-parseMacro :: T.Text -> Maybe (Either (Text, Text) (Text, (Text, Text)))
-parseMacro input = case T.words input of
-    [k, v] -> Just $ Left (k, v)
-    [k, v1, v2] -> Just $ Right (k, (v1, v2))
-    _ -> Nothing
+{-| Determine the filesystem location of a config file path.
+    If the path does not include a slash, then it is resolved using
+    the unicoder built-in locations. If it does include a slash, then
+    it is resolved relative to the passed working directory.
+-}
+locateConfig :: FilePath -- ^ the working directory
+             -> FilePath -- ^ the config path to resolve
+             -> IO FilePath -- ^ resolved, absolute path to the file
+locateConfig cwd path | "/" `isPrefixOf` path = return path
+                      | '/' `elem` path = return $
+                        if "/" `isSuffixOf` cwd
+                            then cwd ++ path
+                            else cwd ++ "/" ++ path
+                      | otherwise = getDataFileName (path ++ ".conf")
+
+{-| Parse a config file, possibly failing. -}
+parseConfig :: FilePath -> Text -> Maybe Config
+parseConfig path contents = case removeBlanks $ T.lines contents of
+    [] -> Nothing
+    (lexer:raw_macros) -> do
+        let emptyConfig = Config { _fromFile = path
+                                 , _idChars = undefined
+                                 , _beginMark = "\\"
+                                 , _endMark = Nothing
+                                 , _betweenMarks = Nothing
+                                 , _macros0 = [], _macros1 = []
+                                 }
+        lexerConfig <- case removeBlanks $ T.splitOn " " lexer of
+            [idChars] -> return $ emptyConfig { _idChars = inClass (T.unpack idChars) }
+            [begin, idChars] -> return $
+                emptyConfig { _idChars = inClass (T.unpack idChars)
+                            , _beginMark = begin
+                            }
+            [begin, end, idChars] -> return $
+                emptyConfig { _idChars = inClass (T.unpack idChars)
+                            , _beginMark = begin
+                            , _endMark = Just end
+                            }
+            [begin, end, open, close, idChars] -> return $
+                emptyConfig { _idChars = inClass (T.unpack idChars)
+                            , _beginMark = begin
+                            , _endMark = Just end
+                            , _betweenMarks = Just (open, close)
+                            }
+            _ -> Nothing
+        let (macros0, macros1) = partitionEithers . catMaybes $ parseMacro <$> raw_macros
+        Just $ lexerConfig { _macros0 = macros0, _macros1 = macros1 }
+    where
+    parseMacro :: T.Text -> Maybe (Either (Text, Text) (Text, (Text, Text)))
+    parseMacro input = case T.words input of
+        [k, v] -> Just $ Left (k, v)
+        [k, v1, v2] -> Just $ Right (k, (v1, v2))
+        _ -> Nothing
+
+{-| Parse the contents of the passed file as  unicoder `Config` -}
+loadConfig :: FilePath -> IO (Maybe Config)
+loadConfig path = do
+    contents <- T.readFile path
+    return $ parseConfig path contents
 
 
+{-| The unicoder algorithm, implemented as an Attoparsec combinator. -}
 xform :: Config -> Parser Text
 xform config = mconcat <$> many (passthrough <|> macro <|> strayBegin) <* endOfInput
     where
@@ -122,6 +152,9 @@ xform config = mconcat <$> many (passthrough <|> macro <|> strayBegin) <* endOfI
         Just x -> return x
     lookupM k v = maybe (fail "") return (k `lookup` v)
     recurse = unicodize config
+
+removeBlanks :: [Text] -> [Text]
+removeBlanks = filter (not . T.null)
 
 {-TODO
 a config lint 

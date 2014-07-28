@@ -13,14 +13,14 @@ followed by an identifier. There's also syntax for wrapping content inside a
 pair of unicode strings.
 For example, with the default configuration, unicoder turns
 `\floor{x} \def \lambda x. (floor x)` into `⌊x⌋ ≡ λ x. (floor x)`.
-Admitedly, this is not a great syntax for some kinds of documents (esp. XeLaTeX),
+Admittedly, this is not a great syntax for some kinds of documents (esp. XeLaTeX),
 but that's why we've allowed for configuration of each of the special marks as
 well as the identifier character set, so Unicoder can be relevant to any type of
 text data.
 
 There's more documentation on our
 [Viewdocs](http://zankoku-okuno.viewdocs.io/unicoder/).
-If yo're learning to use Unicoder, I would especiallt recommend our
+If you're learning to use Unicoder, I would especially recommend our
 [examples](http://zankoku-okuno.viewdocs.io/unicoder/examples.md).
 
 Examples

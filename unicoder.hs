@@ -11,16 +11,11 @@ import Text.Unicoder
 import Paths_unicoder
 import Data.Version
 
-symbolFile :: Options -> IO FilePath
-symbolFile Options { optConfig = which } = 
-    if '/' `elem` which
-        then return which
-        else getDataFileName (which ++ ".conf")
 
 main :: IO ()
 main = do
         (opts, args) <- getOptions
-        m_config <- parseConfigFile =<< symbolFile opts
+        m_config <- loadConfig =<< locateConfig "." (optConfig opts)
         config <- case m_config of
             Nothing -> die "bad configuration file"
             Just config -> return config
@@ -43,7 +38,7 @@ makePair [a, b] = (a, b)
 putErrLn = hPutStrLn stderr
 
 
-data Options = Options  { optConfig :: String
+data Options = Options  { optConfig :: FilePath
                         , optOutput :: Maybe FilePath
                         } deriving (Show)
 startOptions = Options  { optConfig = "default"

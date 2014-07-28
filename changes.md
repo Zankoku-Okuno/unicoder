@@ -1,5 +1,8 @@
 Changes
 =======
+v0.4.1
+------
+ * Fixed issue #1: Failure to xform inside macro argument
 
 v0.4.0
 ------
