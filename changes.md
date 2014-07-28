@@ -3,6 +3,10 @@ Changes
 v0.4.1
 ------
  * Fixed issue #1: Failure to xform inside macro argument
+ * Fixed issue #2: Missing API docs
+ * Library functions for locating and parsing file contents.
+ * Removed `parseConfigFile` for being monolithic.
+ * Added a `_fromFile` field in `Config`: prepping for imports.
 
 v0.4.0
 ------

@@ -7,7 +7,7 @@ import Text.Unicoder
 
 main :: IO ()
 main = do
-	m_config <- parseConfigFile "test/test.config"
+	m_config <- loadConfig "test/test.config"
 	testFile <- case m_config of
 		Nothing -> die "Could not parse config file."
 		Just config -> return $ testFile config
