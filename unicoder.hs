@@ -34,7 +34,6 @@ die err = do
     putErrLn err
     exitFailure
 
-makePair [a, b] = (a, b)
 putErrLn = hPutStrLn stderr
 
 
@@ -81,17 +80,18 @@ options =
         (NoArg
             (\_ -> do
                 prg <- getProgName
+                putStrLn $ concat ["Unicoder v", showVersion version, "-beta"]
                 putStrLn "Ease input of unicode glyphs."
                 putStrLn "This program is lisenced under the 3-clause BSD lisence."
                 putStrLn (usageInfo (prg ++ " [options] files...") options)
                 putStrLn "Run on one or more files to replace special sequences of characters (as defined in a config file) with replacements."
-                putStrLn "The idea is to put in useful unicode symbols and then use those symbols in source code."
-                putStrLn " -- Config Files"
-                putStrLn "    Configuration files are stored in `/etc/zankoku-okuno/unicoder`, and end in `.conf`."
+                putStrLn "The idea is to make it easy to insert unicode symbols: type an escape sequence and run this tool over the source."
+                putStrLn "--Config Files"
+                putStrLn "    Configuration files end in `.conf`. Use `--show-config-dir` to see where they are stored."
                 putStrLn "    Passing a file to `-c` that contains a slash will use exactly the file you specify, instead of looking one up."
-                putStrLn "    Configuration files consist of a top line and a body. The body is simply a database with two whitespace-separated fields. \
-                             \The first is the a name, and the second is the replacement. The top line contains one or two whitespace-separated fields. \
-                             \The first (optional) is a separator, which is optionally consumed after matching a name in the database. The second holds all the characters than can be used to define and use a name."
+                putStrLn "    Check out an installed config file to see the syntax."
+                putStrLn "--More Info"
+                putStrLn "    For more documentation, go to: http://zankoku-okuno.viewdocs.io/unicoder/"
                 exitSuccess))
         "Show help"
     ]

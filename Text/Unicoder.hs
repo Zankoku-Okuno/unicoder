@@ -3,7 +3,6 @@ module Text.Unicoder (
       unicodize
     , unicodizeStr
     , Config
-    --, parseConfigFile
     , locateConfig
     , loadConfig
     , parseConfig
@@ -46,11 +45,6 @@ data Config = Config { _fromFile     :: FilePath
                      , _macros0      :: [(Text, Text)]
                      , _macros1      :: [(Text, (Text, Text))]
                      }
-
-{-| Load and parse a unicoder config file. -}
-parseConfigFile :: FilePath -> IO (Maybe Config)
-parseConfigFile path = withFile path ReadMode $ \fp -> do
-    parseConfig path <$> T.hGetContents fp
 
 {-| Determine the filesystem location of a config file path.
     If the path does not include a slash, then it is resolved using
