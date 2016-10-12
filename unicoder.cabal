@@ -1,5 +1,5 @@
 name:               unicoder
-version:            0.4.1
+version:            0.4.2
 stability:          beta
 synopsis:           Make writing in unicode easy.
 description:        Unicoder is a command-line tool transforms text documents, replacing simple
@@ -47,23 +47,23 @@ extra-source-files: README.md, changes.md,
 executable unicoder
   main-is:             unicoder.hs
   -- other-modules:       
-  build-depends:       base ==4.6.*,
-                       text ==0.11.*,
+  build-depends:       base >=4.8,
+                       text >=0.11,
                        attoparsec >=0.10.0.0,
-                       directory ==1.2.*
+                       directory >=1.2
 
 library
   exposed-modules:     Text.Unicoder
   other-modules:       Paths_unicoder
-  build-depends:       base ==4.6.*,
-                       text ==0.11.*,
+  build-depends:       base >=4.6,
+                       text >=0.11,
                        attoparsec >=0.10.0.0
 
 Test-Suite test-unicoder
     type:              exitcode-stdio-1.0
     main-is:           test/test.hs
-    build-depends:     base ==4.6.*,
-                       text ==0.11.*,
+    build-depends:     base >=4.6,
+                       text >=0.11,
                        attoparsec >=0.10.0.0
 
 source-repository head

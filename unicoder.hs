@@ -29,11 +29,6 @@ mainLoop config filename = do
     let result = unicodize config source
     T.writeFile filename result
 
-
-die err = do
-    putErrLn err
-    exitFailure
-
 putErrLn = hPutStrLn stderr
 
 
