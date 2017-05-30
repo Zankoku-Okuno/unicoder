@@ -1,5 +1,5 @@
 import System.IO
-import System.Exit hiding (die)
+import System.Exit
 import Control.Monad
 import qualified Data.Text.IO as T
 
@@ -22,6 +22,3 @@ testFile config path = do
     input <- T.readFile $ "test/" ++ path ++ ".in"
     output <- T.readFile $ "test/" ++ path ++ ".out"
     return $ unicodize config input == output
-
-die :: String -> IO a
-die msg = putStrLn msg >> exitFailure

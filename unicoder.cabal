@@ -44,34 +44,33 @@ data-files:         *.conf
 extra-source-files: README.md, changes.md,
                     test/*.in, test/*.out, test/test.config
 
-executable unicoder
-  hs-source-dirs:      src
-  main-is:             unicoder.hs
-  -- other-modules:       
-  build-depends:       base >=4.8,
-                       text >=0.11,
-                       attoparsec >=0.10.0.0,
-                       directory >=1.2
-  default-language:    Haskell2010
-  default-extensions:  OverloadedStrings
-
 library
   hs-source-dirs:      src
   exposed-modules:     Text.Unicoder
   other-modules:       Paths_unicoder
-  build-depends:       base >=4.6,
-                       text >=0.11,
-                       attoparsec >=0.10.0.0
+  build-depends:       attoparsec >=0.10.0.0,
+                       base >=4.8 && <5,
+                       text >=0.11 && <2
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings
 
-Test-Suite test-unicoder
-  hs-source-dirs:      src, test
+executable unicoder
+  hs-source-dirs:      app
+  main-is:             unicoder.hs
+  build-depends:       base,
+                       directory >=1.2,
+                       text,
+                       unicoder
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings
+
+test-suite test-unicoder
+  hs-source-dirs:      test
   type:                exitcode-stdio-1.0
   main-is:             test.hs
-  build-depends:       base >=4.6,
-                       text >=0.11,
-                       attoparsec >=0.10.0.0
+  build-depends:       base,
+                       text,
+                       unicoder
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings
 
