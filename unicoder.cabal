@@ -38,33 +38,42 @@ homepage:           https://github.com/Zankoku-Okuno/unicoder
 bug-reports:        https://github.com/Zankoku-Okuno/unicoder/issues
 category:           Text
 build-type:         Simple
-cabal-version:      >=1.9.2
+cabal-version:      >=1.10
 data-dir:           data
 data-files:         *.conf
 extra-source-files: README.md, changes.md,
                     test/*.in, test/*.out, test/test.config
 
 executable unicoder
+  hs-source-dirs:      src
   main-is:             unicoder.hs
   -- other-modules:       
   build-depends:       base >=4.8,
                        text >=0.11,
                        attoparsec >=0.10.0.0,
                        directory >=1.2
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings
 
 library
+  hs-source-dirs:      src
   exposed-modules:     Text.Unicoder
   other-modules:       Paths_unicoder
   build-depends:       base >=4.6,
                        text >=0.11,
                        attoparsec >=0.10.0.0
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings
 
 Test-Suite test-unicoder
-    type:              exitcode-stdio-1.0
-    main-is:           test/test.hs
-    build-depends:     base >=4.6,
+  hs-source-dirs:      src, test
+  type:                exitcode-stdio-1.0
+  main-is:             test.hs
+  build-depends:       base >=4.6,
                        text >=0.11,
                        attoparsec >=0.10.0.0
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings
 
 source-repository head
   type: git

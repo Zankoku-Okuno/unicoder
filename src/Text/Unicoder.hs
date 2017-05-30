@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Text.Unicoder (
       unicodize
     , unicodizeStr

@@ -8,7 +8,7 @@ is to allow ascii interfaces to be able to insert unicode without taking your
 hands off the keyboard. This can allow for unicode to be entered into source
 code or any other text document you're editing.
 
-Entering unicode is not as easy as typing a special string (default backslash)
+Entering unicode is as easy as typing a special string (default backslash)
 followed by an identifier. There's also syntax for wrapping content inside a
 pair of unicode strings.
 For example, with the default configuration, unicoder turns
