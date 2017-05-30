@@ -1,0 +1,13 @@
+language: haskell
+
+install:
+    - sudo aptitude install haskell-platform
+script:
+    - stack init
+    - stack --resolver lts-8 --install-ghc test
+
+
+notifications:
+    email:
+        on_success: never
+on_failure: change
