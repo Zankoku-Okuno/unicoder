@@ -1,7 +1,9 @@
 language: haskell
+ghc:
+    - '7.10'
 
 install:
-    - sudo aptitude install haskell-platform
+    - sudo aptitude -y install haskell-platform
 script:
     - stack init
     - stack --resolver lts-8 --install-ghc test
