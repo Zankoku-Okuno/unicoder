@@ -1,4 +1,8 @@
+sudo: required
 language: sh
+
+dist: trusty
+group: edge
 
 
 cache:
@@ -6,6 +10,7 @@ cache:
         - $HOME/.stack/
 
 before_install:
+    - sudo aptitude install -y libgmp10
     - mkdir -p ~/.local/bin
     - export PATH=$HOME/.local/bin:$PATH
     - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
@@ -14,7 +19,7 @@ install:
     - stack init --no-terminal
     - stack build --resolver lts-8 --install-ghc --no-terminal
 script:
-    - stack test --resolver lts-8 --install-ghc
+    - stack test --resolver lts-8 --install-ghc --no-terminal
 
 
 notifications:
