@@ -1,9 +1,6 @@
 language: haskell
-ghc:
-    - '7.10'
 
 install:
-    - sudo aptitude -y install haskell-platform
     - sudo cabal install stack
 script:
     - stack init
