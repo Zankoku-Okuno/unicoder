@@ -15,15 +15,17 @@ import Data.Version
 main :: IO ()
 main = do
         (opts, args) <- getOptions
-        m_config <- loadConfig =<< locateConfig "." (optConfig opts)
+        m_config <- loadConfig =<< locateConfig (optConfig opts)
         config <- case m_config of
             Nothing -> die "bad configuration file"
             Just config -> return config
         -- TODO -o/--output flag, but how for many files?
-        mapM_ (mainLoop config) args
+        case length args of
+            0 -> putErrLn "No input files." -- FIXME xform stdin onto stdout
+            _ -> mapM_ (mainLoop config) args
         exitSuccess
 
-mainLoop :: Config -> FilePath -> IO ()    
+mainLoop :: Config -> FilePath -> IO ()
 mainLoop config filename = do
     source <- T.readFile filename
     let result = unicodize config source

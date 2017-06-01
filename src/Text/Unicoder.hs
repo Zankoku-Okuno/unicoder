@@ -8,6 +8,8 @@ module Text.Unicoder (
     ) where
 
 import System.IO
+import System.FilePath
+import System.Directory
 import Paths_unicoder
 
 import Data.Text (Text)
@@ -50,15 +52,13 @@ data Config = Config { _fromFile     :: FilePath
     the unicoder built-in locations. If it does include a slash, then
     it is resolved relative to the passed working directory.
 -}
-locateConfig :: FilePath -- ^ the working directory
-             -> FilePath -- ^ the config path to resolve
+locateConfig :: FilePath -- ^ the config path to resolve
              -> IO FilePath -- ^ resolved, absolute path to the file
-locateConfig cwd path | "/" `isPrefixOf` path = return path
-                      | '/' `elem` path = return $
-                        if "/" `isSuffixOf` cwd
-                            then cwd ++ path
-                            else cwd ++ "/" ++ path
-                      | otherwise = getDataFileName (path ++ ".conf")
+locateConfig path
+    | pathSeparator `elem` path = do
+        cwd <- getCurrentDirectory
+        return $ normalise (cwd </> path)
+    | otherwise = getDataFileName (path <.> "conf")
 
 {-| Parse a config file, possibly failing. -}
 parseConfig :: FilePath -> Text -> Maybe Config
