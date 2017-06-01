@@ -4,6 +4,7 @@ ghc:
 
 install:
     - sudo aptitude -y install haskell-platform
+    - sudo cabal install stack
 script:
     - stack init
     - stack --resolver lts-8 --install-ghc test
