@@ -59,9 +59,12 @@ library
 executable unicoder
   hs-source-dirs:      app
   main-is:             unicoder.hs
+  other-modules:       Paths_unicoder
   build-depends:       base,
+                       data-default >=0.5,
                        directory,
                        text,
+                       twitch ==0.1.7.*,
                        unicoder
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings

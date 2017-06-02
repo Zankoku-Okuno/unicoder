@@ -1,10 +1,14 @@
+import Data.String (IsString(..))
 import System.Environment
 import System.IO
 import System.Directory
+import Twitch (Dep, (|>))
+import qualified Twitch
 import System.Exit
 import System.Console.GetOpt
 import qualified Data.Text.IO as T
 import Control.Monad
+import Data.Default
 
 import Text.Unicoder
 
@@ -14,15 +18,19 @@ import Data.Version
 
 main :: IO ()
 main = do
-        (opts, args) <- getOptions
+        (opts, _) <- getOptions
         m_config <- loadConfig =<< locateConfig (optConfig opts)
         config <- case m_config of
             Nothing -> die "bad configuration file"
             Just config -> return config
         -- TODO -o/--output flag, but how for many files?
-        case length args of
-            0 -> putErrLn "No input files." -- FIXME xform stdin onto stdout
-            _ -> mapM_ (mainLoop config) args
+        case optMode opts of
+            StdPipes -> print "stdpipes"
+            InPlace files -> mapM_ (mainLoop config) files
+            FileWatch globs ->
+                Twitch.defaultMainWithOptions def $ do
+                    forM_ (fromString <$> globs) $ \glob ->
+                        glob |> mainLoop config
         exitSuccess
 
 mainLoop :: Config -> FilePath -> IO ()
@@ -34,11 +42,20 @@ mainLoop config filename = do
 putErrLn = hPutStrLn stderr
 
 
-data Options = Options  { optConfig :: FilePath
-                        , optOutput :: Maybe FilePath
-                        } deriving (Show)
+data Mode
+    = StdPipes
+    | InPlace [FilePath]
+    | FileWatch [String]
+    deriving (Show)
+data Options = Options 
+    { optConfig :: FilePath
+    , optOutput :: Maybe FilePath
+    , optMode :: Mode
+    }
+    deriving (Show)
 startOptions = Options  { optConfig = "default"
                         , optOutput = Nothing
+                        , optMode = InPlace (error "internal error (uninit'd in-place mode)")
                         }
 
 getOptions :: IO (Options, [FilePath])
@@ -47,16 +64,25 @@ getOptions = do
     if null errors
       then do
         opts <- foldl (>>=) (return startOptions) actions
-        when (null args) $ die "no input files"
-        return (opts, args)
+        case optMode opts of
+            InPlace _ -> return (opts { optMode = InPlace args }, [])
+            FileWatch _ -> return (opts { optMode = FileWatch args }, [])
+            _ -> return (opts, args)
       else do
         mapM_ putErrLn errors
         exitFailure
 
 options :: [OptDescr (Options -> IO Options)]
 options =
-    [ Option "c" ["config"]
-        (ReqArg 
+    [ Option "w" ["file-watch"]
+        (NoArg
+            (\opt -> return opt { optMode = FileWatch [] }))
+        (unlines [ "Run on files whenever they are changed."
+                 , "Glob syntax is supported (including `**`) so that we can watch for new files."
+                 , "NOTE: Quote glob patterns whenever your shell already supports glob."
+                 ])
+    , Option "c" ["config"]
+        (ReqArg
             (\arg opt -> return opt { optConfig = arg })
             "file")
         "Specify a configuration (usually a programming language)."
@@ -80,8 +106,8 @@ options =
                 putStrLn $ concat ["Unicoder v", showVersion version, "-beta"]
                 putStrLn "Ease input of unicode glyphs."
                 putStrLn "This program is lisenced under the 3-clause BSD lisence."
-                putStrLn (usageInfo (prg ++ " [options] files...") options)
-                putStrLn "Run on one or more files to replace special sequences of characters (as defined in a config file) with replacements."
+                putStrLn (usageInfo (prg ++ " [options] files/globs...") options)
+                putStrLn "Replace special sequences of characters (as defined in a config file) with otherwise hard-to-type replacements."
                 putStrLn "The idea is to make it easy to insert unicode symbols: type an escape sequence and run this tool over the source."
                 putStrLn "--Config Files"
                 putStrLn "    Configuration files end in `.conf`. Use `--show-config-dir` to see where they are stored."
