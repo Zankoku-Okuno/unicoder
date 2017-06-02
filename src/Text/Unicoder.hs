@@ -2,7 +2,6 @@ module Text.Unicoder (
       unicodize
     , unicodizeStr
     , Config
-    , locateConfig
     , loadConfig
     , parseConfig
     ) where
@@ -10,7 +9,6 @@ module Text.Unicoder (
 import System.IO
 import System.FilePath
 import System.Directory
-import Paths_unicoder
 
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -38,57 +36,48 @@ unicodizeStr config = T.unpack . unicodize config . T.pack
 
 
 {-| Aggregate all settings needed to unicodize. -}
-data Config = Config { _fromFile     :: FilePath
-                     , _idChars      :: Char -> Bool
-                     , _beginMark    :: Text
-                     , _endMark      :: Maybe Text
-                     , _betweenMarks :: Maybe (Text, Text)
-                     , _macros0      :: [(Text, Text)]
-                     , _macros1      :: [(Text, (Text, Text))]
-                     }
-
-{-| Determine the filesystem location of a config file path.
-    If the path does not include a slash, then it is resolved using
-    the unicoder built-in locations. If it does include a slash, then
-    it is resolved relative to the passed working directory.
--}
-locateConfig :: FilePath -- ^ the config path to resolve
-             -> IO FilePath -- ^ resolved, absolute path to the file
-locateConfig path
-    | pathSeparator `elem` path = do
-        cwd <- getCurrentDirectory
-        return $ normalise (cwd </> path)
-    | otherwise = getDataFileName (path <.> "conf")
+data Config = Config
+    { _fromFile     :: FilePath
+    , _idChars      :: Char -> Bool
+    , _beginMark    :: Text
+    , _endMark      :: Maybe Text
+    , _betweenMarks :: Maybe (Text, Text)
+    , _macros0      :: [(Text, Text)]
+    , _macros1      :: [(Text, (Text, Text))]
+    }
 
 {-| Parse a config file, possibly failing. -}
 parseConfig :: FilePath -> Text -> Maybe Config
 parseConfig path contents = case removeBlanks $ T.lines contents of
     [] -> Nothing
     (lexer:raw_macros) -> do
-        let emptyConfig = Config { _fromFile = path
-                                 , _idChars = undefined
-                                 , _beginMark = "\\"
-                                 , _endMark = Nothing
-                                 , _betweenMarks = Nothing
-                                 , _macros0 = [], _macros1 = []
-                                 }
+        let empty = Config
+                    { _fromFile = path
+                    , _idChars = undefined
+                    , _beginMark = "\\"
+                    , _endMark = Nothing
+                    , _betweenMarks = Nothing
+                    , _macros0 = [], _macros1 = []
+                    }
         lexerConfig <- case removeBlanks $ T.splitOn " " lexer of
-            [idChars] -> return $ emptyConfig { _idChars = inClass (T.unpack idChars) }
+            [idChars] -> return $
+                empty { _idChars = inClass (T.unpack idChars)
+                      }
             [begin, idChars] -> return $
-                emptyConfig { _idChars = inClass (T.unpack idChars)
-                            , _beginMark = begin
-                            }
+                empty { _idChars = inClass (T.unpack idChars)
+                      , _beginMark = begin
+                      }
             [begin, end, idChars] -> return $
-                emptyConfig { _idChars = inClass (T.unpack idChars)
-                            , _beginMark = begin
-                            , _endMark = Just end
-                            }
+                empty { _idChars = inClass (T.unpack idChars)
+                      , _beginMark = begin
+                      , _endMark = Just end
+                      }
             [begin, end, open, close, idChars] -> return $
-                emptyConfig { _idChars = inClass (T.unpack idChars)
-                            , _beginMark = begin
-                            , _endMark = Just end
-                            , _betweenMarks = Just (open, close)
-                            }
+                empty { _idChars = inClass (T.unpack idChars)
+                      , _beginMark = begin
+                      , _endMark = Just end
+                      , _betweenMarks = Just (open, close)
+                      }
             _ -> Nothing
         let (macros0, macros1) = partitionEithers . catMaybes $ parseMacro <$> raw_macros
         Just $ lexerConfig { _macros0 = macros0, _macros1 = macros1 }

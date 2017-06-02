@@ -1,17 +1,20 @@
 import Data.String (IsString(..))
-import System.Environment
-import System.IO
+
+import Data.Default
+import Control.Monad
+
+import System.FilePath
 import System.Directory
-import Twitch (Dep, (|>))
-import qualified Twitch
+import System.IO
 import System.Exit
 import System.Console.GetOpt
+import System.Environment
+
+import Twitch (Dep, (|>))
+import qualified Twitch
 import qualified Data.Text.IO as T
-import Control.Monad
-import Data.Default
 
 import Text.Unicoder
-
 import Paths_unicoder
 import Data.Version
 
@@ -39,6 +42,20 @@ mainLoop config filename = do
     let result = unicodize config source
     T.writeFile filename result
 
+{-| Determine the filesystem location of a config file path.
+    If the path does not include a slash, then it is resolved using
+    the unicoder built-in locations. If it does include a slash, then
+    it is resolved relative to the passed working directory.
+-}
+locateConfig :: FilePath -- ^ the config path to resolve
+             -> IO FilePath -- ^ resolved, absolute path to the file
+locateConfig path
+    | pathSeparator `elem` path = do
+        cwd <- getCurrentDirectory
+        return $ normalise (cwd </> path)
+    | otherwise = getDataFileName (path <.> "conf")
+
+
 putErrLn = hPutStrLn stderr
 
 
@@ -53,17 +70,20 @@ data Options = Options
     , optMode :: Mode
     }
     deriving (Show)
-startOptions = Options  { optConfig = "default"
-                        , optOutput = Nothing
-                        , optMode = InPlace (error "internal error (uninit'd in-place mode)")
-                        }
+instance Default Options where
+    def =  Options
+            { optConfig = "default"
+            , optOutput = Nothing
+            , optMode = InPlace (error "internal error (uninit'd in-place mode)")
+            }
+
 
 getOptions :: IO (Options, [FilePath])
 getOptions = do
-    (actions, args, errors) <- return . getOpt Permute options =<< getArgs
+    (actions, args, errors) <- getOpt Permute options <$> getArgs
     if null errors
       then do
-        opts <- foldl (>>=) (return startOptions) actions
+        opts <- foldl (>>=) (return def) actions
         case optMode opts of
             InPlace _ -> return (opts { optMode = InPlace args }, [])
             FileWatch _ -> return (opts { optMode = FileWatch args }, [])
