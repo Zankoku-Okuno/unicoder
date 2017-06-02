@@ -16,7 +16,6 @@ before_install:
     - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 
 install:
-    - stack init --no-terminal
     - stack build --resolver ${STACK_RESOLVER} --install-ghc --no-terminal
 script:
     - stack test --resolver ${STACK_RESOLVER} --install-ghc --no-terminal
