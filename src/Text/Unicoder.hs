@@ -137,11 +137,3 @@ xform config = mconcat <$> many (passthrough <|> macro <|> strayBegin) <* endOfI
 
 removeBlanks :: [Text] -> [Text]
 removeBlanks = filter (not . T.null)
-
-{-TODO
-a config lint 
-    characters don't appear twice in the lexer
-    open and end are distinguishable
-    macros are defined only using idChars
-    macro lines are word-length 2 or 3
--}

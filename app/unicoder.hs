@@ -26,7 +26,6 @@ main = do
         config <- case m_config of
             Nothing -> die "bad configuration file"
             Just config -> return config
-        -- TODO -o/--output flag, but how for many files?
         case optMode opts of
             StdPipes -> runHandle config (stdin, stdout)
             InPlace files -> mapM_ (runFile config) files
@@ -90,10 +89,11 @@ getOptions = do
     if null errors
       then do
         opts <- foldl (>>=) (return def) actions
-        return $ case optMode opts of
-            InPlace _ -> opts { optMode = InPlace args }
-            FileWatch _ -> opts { optMode = FileWatch args }
-            _ -> opts -- TODO what about non-null args?
+        case optMode opts of
+            InPlace _ -> return $ opts { optMode = InPlace args }
+            FileWatch _ -> return $ opts { optMode = FileWatch args }
+            _ | null args -> return opts
+              | otherwise -> die $ "unrecognized option: " ++ show (head args)
       else do
         mapM_ putErrLn errors
         exitFailure
