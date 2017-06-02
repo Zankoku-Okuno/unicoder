@@ -21,26 +21,32 @@ import Data.Version
 
 main :: IO ()
 main = do
-        (opts, _) <- getOptions
+        opts <- getOptions
         m_config <- loadConfig =<< locateConfig (optConfig opts)
         config <- case m_config of
             Nothing -> die "bad configuration file"
             Just config -> return config
         -- TODO -o/--output flag, but how for many files?
         case optMode opts of
-            StdPipes -> print "stdpipes"
-            InPlace files -> mapM_ (mainLoop config) files
+            StdPipes -> runHandle config (stdin, stdout)
+            InPlace files -> mapM_ (runFile config) files
             FileWatch globs ->
                 Twitch.defaultMainWithOptions def $ do
                     forM_ (fromString <$> globs) $ \glob ->
-                        glob |> mainLoop config
+                        glob |> runFile config
         exitSuccess
 
-mainLoop :: Config -> FilePath -> IO ()
-mainLoop config filename = do
+runFile :: Config -> FilePath -> IO ()
+runFile config filename = do
     source <- T.readFile filename
     let result = unicodize config source
     T.writeFile filename result
+
+runHandle :: Config -> (Handle, Handle) -> IO ()
+runHandle config (i, o) = do
+    source <- T.hGetContents i
+    let result = unicodize config source
+    T.hPutStr o result
 
 {-| Determine the filesystem location of a config file path.
     If the path does not include a slash, then it is resolved using
@@ -74,29 +80,33 @@ instance Default Options where
     def =  Options
             { optConfig = "default"
             , optOutput = Nothing
-            , optMode = InPlace (error "internal error (uninit'd in-place mode)")
+            , optMode = StdPipes
             }
 
 
-getOptions :: IO (Options, [FilePath])
+getOptions :: IO Options
 getOptions = do
     (actions, args, errors) <- getOpt Permute options <$> getArgs
     if null errors
       then do
         opts <- foldl (>>=) (return def) actions
-        case optMode opts of
-            InPlace _ -> return (opts { optMode = InPlace args }, [])
-            FileWatch _ -> return (opts { optMode = FileWatch args }, [])
-            _ -> return (opts, args)
+        return $ case optMode opts of
+            InPlace _ -> opts { optMode = InPlace args }
+            FileWatch _ -> opts { optMode = FileWatch args }
+            _ -> opts -- TODO what about non-null args?
       else do
         mapM_ putErrLn errors
         exitFailure
 
 options :: [OptDescr (Options -> IO Options)]
 options =
-    [ Option "w" ["file-watch"]
+    [ Option "i" ["in-place"]
         (NoArg
-            (\opt -> return opt { optMode = FileWatch [] }))
+            (\opt -> return opt {optMode = InPlace (error "uninit'd in-place") }))
+            "Run once on listed files."
+    , Option "w" ["file-watch"]
+        (NoArg
+            (\opt -> return opt { optMode = FileWatch (error "uninit'd file-watch") }))
         (unlines [ "Run on files whenever they are changed."
                  , "Glob syntax is supported (including `**`) so that we can watch for new files."
                  , "NOTE: Quote glob patterns whenever your shell already supports glob."
@@ -126,7 +136,7 @@ options =
                 putStrLn $ concat ["Unicoder v", showVersion version, "-beta"]
                 putStrLn "Ease input of unicode glyphs."
                 putStrLn "This program is lisenced under the 3-clause BSD lisence."
-                putStrLn (usageInfo (prg ++ " [options] files/globs...") options)
+                putStrLn (usageInfo (prg ++ " [options] [-i files... | -w globs...]") options)
                 putStrLn "Replace special sequences of characters (as defined in a config file) with otherwise hard-to-type replacements."
                 putStrLn "The idea is to make it easy to insert unicode symbols: type an escape sequence and run this tool over the source."
                 putStrLn "--Config Files"
