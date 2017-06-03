@@ -27,7 +27,7 @@ configuration files.
 Examples
 --------
 
-Assuming a confif file that looks like this:
+Assuming a config file that looks like this:
 
 ```
 lambda λ
