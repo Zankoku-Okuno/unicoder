@@ -1,0 +1,3 @@
+\bag{foo}
+\{bag\bag{foo}\}bag.
+\bag{a \to b}
