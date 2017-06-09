@@ -13,7 +13,7 @@ Configuration File
 
 Since keyboards and textual formats vary, nearly every piece of unicoder is configurable.
 
-Configuration consist of a set of marks and a list of replacements.
+Configuration consists of a set of marks and a list of replacements.
 
 Each mark is a piece of text not containing whitespace. The four marks are called
 `begin-mark`, `end-mark`, `open-mark` and `close-mark`. Once configured, they will
@@ -24,7 +24,8 @@ A one-part replacement consists of a `key-name` and a `value`, where both are te
 A two-part replacement consists of a `key-name`, an `open-value` and a `close-value`, all text not containing whitespace.
 These replacements are gathered into lookup tables and used in the [conversion grammar](#user-content-conversion-algorithm).
 
-A grammar for the configuration file is given below. Empty lines and space at the beginning or end of a line is ignored.
+A grammar for the configuration file is given below.
+Empty lines and space at the beginning or end of a line are ignored.
 Note that the definition of `key-name` relies on the value of `key-name-range`.
 
 ```

@@ -3,7 +3,7 @@ Unicoder
 
 [![Build Status](https://travis-ci.org/Zankoku-Okuno/unicoder.svg?branch=master)](https://travis-ci.org/Zankoku-Okuno/unicoder)
 
-The unicoder reads in a source file and makes replacements in-place. The goal
+Unicoder reads in a source file and makes replacements in-place. The goal
 is to allow ascii interfaces to be able to insert unicode without taking your
 hands off the keyboard. This can allow for unicode to be entered into source
 code or any other text document you're editing.
@@ -18,10 +18,18 @@ but that's why we've allowed for configuration of each of the special marks as
 well as the identifier character set, so Unicoder can be relevant to any type of
 text data.
 
+By default, unicoder takes input on stdin and puts the unicodized verision on
+stdout: `unicoder < file.in > file.out`.
+Unicoder can also operate in-place on multiple files (`unicoder -i src/*.c`)
+and in file-watch mode (`unicoder -w 'src/**/*.c' &`; note that the glob pattern
+is quoted so that it is passed into unicoder instead of being expanded
+immediately).
+
 There's more documentation on our
 [Viewdocs](http://zankoku-okuno.viewdocs.io/unicoder/).
 If you're learning to use Unicoder, I would especially recommend our
 [examples](http://zankoku-okuno.viewdocs.io/unicoder/examples.md).
+
 
 Examples
 --------
@@ -59,7 +67,8 @@ newline_period = "\n."
 
 Will remain unchanged, as `x` and `n` are not in the config file.
 
-There are also two-part replacements. These take a single (non-nested) argument, transforming
+There are also two-part replacements. These take a single (non-nested) argument,
+transforming
 
 ```
 \bag{black}

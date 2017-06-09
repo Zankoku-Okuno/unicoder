@@ -19,13 +19,13 @@ description:        Unicoder is a command-line tool transforms text documents, r
                     In the interests of giving readers /some/ idea whats going on,
                     with the default settings,
                     .
-                    > \E x. \A y. x \-> y
-                    > \l x,y. x \of x \of y
+                    > \E.x. \A.y. x \-> y
+                    > \l.x,y. x \of x \of y
                     .
                     becomes
                     .
                     > ∃x ∀y x → y
-                    > λ x,y. x ∘ x ∘ y
+                    > λx,y. x ∘ x ∘ y
                     .
                     except that the newline isn't removed (thanks, cabal!). Also, there are a couple
                     important features that I can't seem to get cabal to even parse (thanks again!).

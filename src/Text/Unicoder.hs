@@ -1,6 +1,24 @@
+{-|
+Load unicoder configurations and oerform unicoder transformations on text and strings.
+
+Unicoder replaces simple macros with configured strings, e.g.
+
+> \E.x. \A.y. x \-> y
+> \l.x,y. x \of x \of y
+
+becomes
+
+> ∃x ∀y x → y
+> λx,y. x ∘ x ∘ y
+
+For more information, see [the documentation](http://zankoku-okuno.viewdocs.io/unicoder/).
+-}
 module Text.Unicoder (
+    -- * Unicoder Algorithm
       unicodize
+    , unicodizeLazy
     , unicodizeStr
+    -- * Configuration
     , Config
     , loadConfig
     , parseConfig
@@ -12,6 +30,7 @@ import System.Directory
 
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Lazy as TL
 import qualified Data.Text.IO as T
 import Data.Attoparsec.Text
 import Data.Attoparsec.Combinator
@@ -29,6 +48,10 @@ unicodize :: Config -> Text -> Text
 unicodize config input = case parseOnly (xform config) input of
     Left err -> error "unicoder: internal error"
     Right val -> val
+
+{-| Perform the unicoder transformation on a lazy 'TL.Text' value. -}
+unicodizeLazy :: Config -> TL.Text -> TL.Text
+unicodizeLazy config = TL.fromStrict . unicodize config . TL.toStrict
 
 {-| Perform the unicoder transformation on a 'String' value. -}
 unicodizeStr :: Config -> String -> String
