@@ -13,7 +13,7 @@ main = do
         Just config -> return $ testFile config
     let files = ["passthrough", "mono", "di"]
     results <- mapM testFile files
-    unless (all id results) $ do
+    unless (and results) $ do
         mapM_ putStrLn $ zipWith (\a b -> a ++ ": " ++ if b then "OK" else "FAILURE") files results
         exitFailure
 

@@ -30,7 +30,7 @@ main = do
             StdPipes -> runHandle config (stdin, stdout)
             InPlace files -> mapM_ (runFile config) files
             FileWatch globs ->
-                Twitch.defaultMainWithOptions def $ do
+                Twitch.defaultMainWithOptions def $
                     forM_ (fromString <$> globs) $ \glob ->
                         glob |> runFile config
         exitSuccess
